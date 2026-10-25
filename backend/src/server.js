@@ -42,8 +42,7 @@ async function start() {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log('Received ' + signal + '; shutting down.');
-    realtimeServer.close();
-    httpServer.close(() => {
+    realtimeServer.close(() => {
       pool
         .end()
         .then(() => process.exit(0))
