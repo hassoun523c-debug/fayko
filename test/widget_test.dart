@@ -291,8 +291,13 @@ void main() {
 
     expect(find.text('ريلز فايكو'), findsOneWidget);
     expect(find.text('رياضة'), findsOneWidget);
+    await tester.drag(
+      find.byKey(const ValueKey('reel-category-list')),
+      const Offset(-900, 0),
+    );
+    await tester.pumpAndSettle();
     expect(find.text('ترندات العالم'), findsOneWidget);
-    expect(find.text('تشغيل الريلز قيد التطوير'), findsOneWidget);
+    expect(find.text('الريلز تحتاج إعداد مخزن الفيديو'), findsOneWidget);
   });
 
   testWidgets('bottom navigation opens the chat section', (tester) async {
