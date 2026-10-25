@@ -59,6 +59,17 @@ class ChatMessage {
   final DateTime createdAt;
   final bool isMine;
 
+  ChatMessage copyWith({bool? isMine}) {
+    return ChatMessage(
+      id: id,
+      body: body,
+      senderId: senderId,
+      sender: sender,
+      createdAt: createdAt,
+      isMine: isMine ?? this.isMine,
+    );
+  }
+
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final senderJson = json['sender'];
     if (senderJson is! Map<String, dynamic>) {
