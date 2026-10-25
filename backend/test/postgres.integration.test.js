@@ -24,6 +24,21 @@ test(
     let firstSocket;
     let secondSocket;
     let outsiderSocket;
+    const storedObjects = new Map();
+    const mediaStorage = {
+      async createUploadUrl({ key }) {
+        return 'https://upload.example.test/' + encodeURIComponent(key) + '?signature=test';
+      },
+      async createDownloadUrl({ key }) {
+        return 'https://media.example.test/' + encodeURIComponent(key) + '?signature=test';
+      },
+      async headObject({ key }) {
+        return storedObjects.get(key) ?? null;
+      },
+      async deleteObject({ key }) {
+        storedObjects.delete(key);
+      },
+    };
 
     try {
       await runMigrations(pool);
@@ -40,7 +55,7 @@ test(
             : { disconnectSockets: () => false };
         },
       };
-      const app = createApp({ pool, jwtSecret, io: ioBridge });
+      const app = createApp({ pool, jwtSecret, io: ioBridge, mediaStorage });
       server = createServer(app);
       realtimeServer = attachRealtimeGateway({ httpServer: server, pool, jwtSecret });
       realtimeServerRef = realtimeServer;
@@ -160,6 +175,51 @@ test(
       assert.equal(updatedProfile.bio, 'نبذة اختبار');
       assert.deepEqual(updatedProfile.interests, ['sports', 'gaming', 'global_trends']);
 
+      const reelUploadUrlResponse = await request('/api/v1/reels/upload-url', {
+        method: 'POST',
+        token: first.accessToken,
+        body: {
+          category: 'gaming',
+          contentType: 'video/mp4',
+          fileSizeBytes: 1024,
+        },
+      });
+      assert.equal(reelUploadUrlResponse.status, 201);
+      const reelUpload = await reelUploadUrlResponse.json();
+      assert.ok(reelUpload.objectKey.startsWith(first.user.id + '/'));
+      assert.match(reelUpload.uploadUrl, /^https:\/\/upload\.example\.test\//);
+      storedObjects.set(reelUpload.objectKey, {
+        sizeBytes: 1024,
+        contentType: 'video/mp4',
+      });
+
+      const createReelResponse = await request('/api/v1/reels', {
+        method: 'POST',
+        token: first.accessToken,
+        body: {
+          objectKey: reelUpload.objectKey,
+          caption: 'ريل ألعاب للاختبار',
+          category: 'gaming',
+          contentType: 'video/mp4',
+          fileSizeBytes: 1024,
+          durationSeconds: 22,
+        },
+      });
+      assert.equal(createReelResponse.status, 201);
+      const createdReel = (await createReelResponse.json()).reel;
+      assert.equal(createdReel.caption, 'ريل ألعاب للاختبار');
+      assert.equal(createdReel.category, 'gaming');
+      assert.equal(createdReel.sizeBytes, 1024);
+      assert.match(createdReel.videoUrl, /^https:\/\/media\.example\.test\//);
+
+      const reelsFeedResponse = await request('/api/v1/reels?category=gaming', {
+        token: second.accessToken,
+      });
+      assert.equal(reelsFeedResponse.status, 200);
+      const reelsFeed = await reelsFeedResponse.json();
+      assert.equal(reelsFeed.uploadEnabled, true);
+      assert.ok(reelsFeed.reels.some((reel) => reel.id === createdReel.id));
+
       const createPostResponse = await request('/api/v1/posts', {
         method: 'POST',
         token: first.accessToken,
@@ -238,6 +298,32 @@ test(
       });
       assert.equal(reportResponse.status, 201);
       assert.equal((await reportResponse.json()).report.reason, 'spam');
+
+      const reelReportResponse = await request('/api/v1/reports', {
+        method: 'POST',
+        token: second.accessToken,
+        body: {
+          targetType: 'reel',
+          targetId: createdReel.id,
+          reason: 'other',
+          details: 'بلاغ ريل اختبار',
+        },
+      });
+      assert.equal(reelReportResponse.status, 201);
+      assert.equal((await reelReportResponse.json()).report.targetType, 'reel');
+
+      const otherUserDeleteReelResponse = await request('/api/v1/reels/' + createdReel.id, {
+        method: 'DELETE',
+        token: second.accessToken,
+      });
+      assert.equal(otherUserDeleteReelResponse.status, 404);
+
+      const deleteOwnReelResponse = await request('/api/v1/reels/' + createdReel.id, {
+        method: 'DELETE',
+        token: first.accessToken,
+      });
+      assert.equal(deleteOwnReelResponse.status, 204);
+      assert.equal(storedObjects.has(reelUpload.objectKey), false);
 
       const duplicateReportResponse = await request('/api/v1/reports', {
         method: 'POST',
