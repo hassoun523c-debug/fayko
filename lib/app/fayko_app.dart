@@ -11,6 +11,7 @@ import '../features/chat/data/chat_realtime.dart';
 import '../features/chat/presentation/chat_screens.dart';
 import '../features/feed/data/feed_repository.dart';
 import '../features/feed/presentation/feed_screen.dart';
+import '../features/reels/data/reels_repository.dart';
 import '../features/reels/presentation/reels_screen.dart';
 import '../features/profile/presentation/edit_profile_dialog.dart';
 import '../features/users/data/users_repository.dart';
@@ -25,6 +26,7 @@ class FaykoApp extends StatelessWidget {
     this.usersRepository,
     this.chatRepository,
     this.chatRealtime,
+    this.reelsRepository,
   });
 
   final AuthRepository? authRepository;
@@ -32,6 +34,7 @@ class FaykoApp extends StatelessWidget {
   final UsersRepository? usersRepository;
   final ChatRepository? chatRepository;
   final ChatRealtime? chatRealtime;
+  final ReelsRepository? reelsRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +96,7 @@ class FaykoApp extends StatelessWidget {
           usersRepository: usersRepository,
           chatRepository: chatRepository,
           chatRealtime: chatRealtime,
+          reelsRepository: reelsRepository,
         ),
       ),
     );
@@ -126,6 +130,7 @@ class _AuthGateState extends State<AuthGate> {
   late final UsersRepository _usersRepository;
   late final ChatRepository _chatRepository;
   late final ChatRealtime _chatRealtime;
+  late final ReelsRepository _reelsRepository;
   final GlobalKey<FeedScreenState> _feedKey = GlobalKey<FeedScreenState>();
   final GlobalKey<ChatListScreenState> _chatKey = GlobalKey<ChatListScreenState>();
 
@@ -152,6 +157,7 @@ class _AuthGateState extends State<AuthGate> {
     _chatRepository = widget.chatRepository ??
         RemoteChatRepository(apiClient: _apiClient);
     _chatRealtime = widget.chatRealtime ?? SocketChatRealtimeClient();
+    _reelsRepository = widget.reelsRepository ?? RemoteReelsRepository(apiClient: _apiClient);
     _restoreSession();
   }
 
@@ -390,6 +396,8 @@ class _AuthGateState extends State<AuthGate> {
           ),
           ReelsScreen(
             user: session.user,
+            accessToken: session.accessToken,
+            repository: _reelsRepository,
             onSaveInterests: _updateInterests,
           ),
           ChatListScreen(
