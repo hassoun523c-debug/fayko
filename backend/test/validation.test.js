@@ -9,6 +9,7 @@ import {
   registerSchema,
   reportSchema,
   interestsSchema,
+  postSchema,
 } from '../src/validation.js';
 
 test('registration trims and normalizes account identifiers', () => {
@@ -107,4 +108,12 @@ test('interest preferences accept supported unique categories only', () => {
   assert.equal(interestsSchema.safeParse(['sports', 'sports']).success, false);
   assert.equal(interestsSchema.safeParse(['unknown_category']).success, false);
   assert.equal(interestsSchema.safeParse(Array(16).fill('sports')).success, false);
+});
+
+test('posts accept an optional supported category', () => {
+  assert.deepEqual(postSchema.parse({ body: '  مرحباً  ', category: 'sports' }), {
+    body: 'مرحباً',
+    category: 'sports',
+  });
+  assert.equal(postSchema.safeParse({ body: 'منشور', category: 'unknown' }).success, false);
 });
