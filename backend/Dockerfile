@@ -8,6 +8,7 @@ RUN npm install --omit=dev --no-audit --no-fund \
     && npm cache clean --force
 
 COPY src ./src
+COPY db ./db
 USER node
 
 EXPOSE 4000
