@@ -46,7 +46,7 @@ class PublicUser {
       bio: bio,
       postsCount: postsCount,
       followersCount: followersCount ?? this.followersCount,
-      followingCount: followingCount ?? this.followingCount,
+      followingCount: this.followingCount,
       isFollowing: isFollowing ?? this.isFollowing,
       avatarUrl: avatarUrl,
     );
