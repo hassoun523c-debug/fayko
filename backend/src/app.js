@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { createAuthRouter } from './routes/auth.js';
 import { createPostsRouter } from './routes/posts.js';
+import { createUsersRouter } from './routes/users.js';
 
 export function createApp({ pool, jwtSecret }) {
   const app = express();
@@ -63,6 +64,7 @@ export function createApp({ pool, jwtSecret }) {
     createAuthRouter({ pool, jwtSecret, authRateLimit }),
   );
   app.use('/api/v1/posts', createPostsRouter({ pool, jwtSecret }));
+  app.use('/api/v1/users', createUsersRouter({ pool, jwtSecret }));
 
   app.use((_req, res) => {
     return res.status(404).json({
