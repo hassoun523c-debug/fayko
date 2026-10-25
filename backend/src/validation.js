@@ -43,6 +43,7 @@ export const profileUpdateSchema = z
     bio: z.string().trim().max(160).optional(),
     avatarUrl: z.union([z.string().url().max(2048), z.null()]).optional(),
   })
+  .strict()
   .refine(
     (value) => Object.values(value).some((field) => field !== undefined),
     'At least one profile field must be supplied.',
