@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -13,9 +14,10 @@ export async function verifyPassword(password, passwordHash) {
   return bcrypt.compare(password, passwordHash);
 }
 
-export function signAccessToken(userId, secret) {
+export function signAccessToken(userId, secret, sessionId = randomUUID()) {
   return jwt.sign({}, secret, {
     subject: userId,
+    jwtid: sessionId,
     issuer: TOKEN_ISSUER,
     audience: TOKEN_AUDIENCE,
     expiresIn: TOKEN_LIFETIME,
@@ -30,11 +32,15 @@ export function verifyAccessToken(token, secret) {
     algorithms: ['HS256'],
   });
 
-  if (typeof decoded !== 'object' || typeof decoded.sub !== 'string') {
+  if (
+    typeof decoded !== 'object' ||
+    typeof decoded.sub !== 'string' ||
+    typeof decoded.jti !== 'string'
+  ) {
     throw new Error('Invalid access-token payload.');
   }
 
-  return { userId: decoded.sub };
+  return { userId: decoded.sub, sessionId: decoded.jti };
 }
 
 export const accessTokenLifetimeSeconds = 3600;
