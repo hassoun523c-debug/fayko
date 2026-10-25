@@ -30,8 +30,12 @@ For an Android emulator, Flutter's default API URL is `http://10.0.2.2:4000/api/
 - GET `/api/v1/users/search?q=term&limit=20` — search public profiles.
 - GET `/api/v1/users/:userId` — read a public profile and counters.
 - POST / DELETE `/api/v1/users/:userId/follow` — follow or unfollow an account.
+- POST `/api/v1/conversations/direct` — create or reuse a one-to-one conversation.
+- GET `/api/v1/conversations` — list conversations and unread counts.
+- GET / POST `/api/v1/conversations/:conversationId/messages` — read history or send a text message; only members can access it.
+- POST `/api/v1/conversations/:conversationId/read` — advance the member read marker.
 
-The Flutter client currently connects to register/login/session restore, profile updates, the text-feed, likes and comment routes, and has a user-search/follow screen. These paths are implemented in source, but must still be verified end-to-end against a running PostgreSQL instance and Android environment.
+The Flutter client currently connects to register/login/session restore, profile updates, text posts, likes, comments, user search/follow, and basic one-to-one text messaging. It can create direct conversations, send/read messages, and display unread counts. These paths are implemented in source, but must still be verified end-to-end against a running PostgreSQL instance and Android environment. Chat refresh is currently manual, not realtime.
 
 ## Tests and security baseline
 
@@ -39,4 +43,4 @@ Node's built-in test runner includes validation, password/token and HTTP route t
 
 ## Not implemented yet
 
-The backend does not yet include refresh-token rotation or server-side session revocation, email verification, password recovery, media uploads/storage, push notifications, realtime messaging, voice/video calls, end-to-end encryption, a complete moderation/report/block system, production deployment, or a full security review. These must not be treated as complete.
+The backend does not yet include refresh-token rotation or server-side session revocation, email verification, password recovery, media uploads/storage, push notifications and realtime message delivery, voice/video calls, end-to-end encryption, group conversations, message attachments/voice notes, a complete moderation/report/block system, production deployment, or a full security review. These must not be treated as complete.
