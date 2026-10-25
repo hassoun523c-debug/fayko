@@ -1,5 +1,6 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
+import { isBlockedBetween } from '../moderation.js';
 import { uuidSchema } from '../validation.js';
 
 function invalidUserId(res) {
@@ -30,10 +31,13 @@ const profileQuery = [
   '(SELECT COUNT(*)::int FROM follows f WHERE f.follower_id = u.id) AS following_count,',
   'EXISTS (SELECT 1 FROM follows f WHERE f.follower_id = $2',
   'AND f.following_id = u.id) AS is_following',
-  'FROM users u WHERE u.id = $1',
+  'FROM users u WHERE u.id = $1 AND NOT EXISTS (' +
+    'SELECT 1 FROM user_blocks b WHERE ' +
+    '(b.blocker_id = $2 AND b.blocked_id = u.id) OR ' +
+    '(b.blocker_id = u.id AND b.blocked_id = $2))',
 ].join(' ');
 
-export function createUsersRouter({ pool, jwtSecret }) {
+export function createUsersRouter({ pool, jwtSecret, io = null }) {
   const router = express.Router();
   router.use(requireAuth(jwtSecret, pool));
 
@@ -66,8 +70,11 @@ export function createUsersRouter({ pool, jwtSecret }) {
         '(SELECT COUNT(*)::int FROM follows f WHERE f.following_id = u.id) AS followers_count, ' +
         '(SELECT COUNT(*)::int FROM follows f WHERE f.follower_id = u.id) AS following_count, ' +
         'EXISTS (SELECT 1 FROM follows f WHERE f.follower_id = $3 AND f.following_id = u.id) AS is_following ' +
-        'FROM users u WHERE POSITION($1 IN LOWER(u.username)) > 0 ' +
-        'OR POSITION($1 IN LOWER(u.display_name)) > 0 ' +
+        'FROM users u WHERE (POSITION($1 IN LOWER(u.username)) > 0 ' +
+        'OR POSITION($1 IN LOWER(u.display_name)) > 0) ' +
+        'AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE ' +
+        '(b.blocker_id = $3 AND b.blocked_id = u.id) OR ' +
+        '(b.blocker_id = u.id AND b.blocked_id = $3)) ' +
         'ORDER BY followers_count DESC, u.username ASC LIMIT $2',
       [query, limit, req.auth.userId],
     );
@@ -114,6 +121,11 @@ export function createUsersRouter({ pool, jwtSecret }) {
         error: { code: 'user_not_found', message: 'المستخدم غير موجود.' },
       });
     }
+    if (await isBlockedBetween(pool, req.auth.userId, parsedId.data)) {
+      return res.status(403).json({
+        error: { code: 'blocked_relationship', message: 'لا يمكن متابعة هذا الحساب.' },
+      });
+    }
 
     await pool.query(
       'INSERT INTO follows (follower_id, following_id) VALUES ($1, $2) ' +
@@ -144,6 +156,66 @@ export function createUsersRouter({ pool, jwtSecret }) {
     );
 
     return res.status(200).json({ following: false });
+  });
+
+  router.post('/:userId/block', async (req, res) => {
+    const parsedId = uuidSchema.safeParse(req.params.userId);
+    if (!parsedId.success) return invalidUserId(res);
+    const targetId = parsedId.data;
+
+    if (targetId === req.auth.userId) {
+      return res.status(400).json({
+        error: { code: 'cannot_block_self', message: 'ما تگدر تحظر حسابك.' },
+      });
+    }
+
+    const target = await pool.query('SELECT id FROM users WHERE id = $1', [targetId]);
+    if (target.rows.length === 0) {
+      return res.status(404).json({
+        error: { code: 'user_not_found', message: 'المستخدم غير موجود.' },
+      });
+    }
+
+    await pool.query(
+      'INSERT INTO user_blocks (blocker_id, blocked_id) VALUES ($1, $2) ' +
+        'ON CONFLICT (blocker_id, blocked_id) DO NOTHING',
+      [req.auth.userId, targetId],
+    );
+    await pool.query(
+      'DELETE FROM follows WHERE (follower_id = $1 AND following_id = $2) ' +
+        'OR (follower_id = $2 AND following_id = $1)',
+      [req.auth.userId, targetId],
+    );
+
+    const sharedConversations = await pool.query(
+      'SELECT a.conversation_id FROM conversation_members a ' +
+        'JOIN conversation_members b ON b.conversation_id = a.conversation_id ' +
+        'WHERE a.user_id = $1 AND b.user_id = $2',
+      [req.auth.userId, targetId],
+    );
+    for (const item of sharedConversations.rows) {
+      io?.in(item.conversation_id).socketsLeave(item.conversation_id);
+      io?.to('user:' + req.auth.userId).emit('conversation:updated', {
+        conversationId: item.conversation_id,
+      });
+      io?.to('user:' + targetId).emit('conversation:updated', {
+        conversationId: item.conversation_id,
+      });
+    }
+
+    return res.status(200).json({ blocked: true });
+  });
+
+  router.delete('/:userId/block', async (req, res) => {
+    const parsedId = uuidSchema.safeParse(req.params.userId);
+    if (!parsedId.success) return invalidUserId(res);
+    const targetId = parsedId.data;
+
+    await pool.query(
+      'DELETE FROM user_blocks WHERE blocker_id = $1 AND blocked_id = $2',
+      [req.auth.userId, targetId],
+    );
+    return res.status(200).json({ blocked: false });
   });
 
   return router;
