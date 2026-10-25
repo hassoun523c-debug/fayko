@@ -17,6 +17,12 @@ abstract interface class AuthRepository {
     required String displayName,
   });
 
+  Future<AuthUser> updateProfile({
+    required String accessToken,
+    required String displayName,
+    required String bio,
+  });
+
   Future<void> logout();
 }
 
@@ -101,6 +107,27 @@ class RemoteAuthRepository implements AuthRepository {
       user: AuthUser.fromJson(userJson),
       accessToken: token,
     );
+  }
+
+  @override
+  Future<AuthUser> updateProfile({
+    required String accessToken,
+    required String displayName,
+    required String bio,
+  }) async {
+    final payload = await _apiClient.patch(
+      '/auth/me',
+      token: accessToken,
+      body: {
+        'displayName': displayName.trim(),
+        'bio': bio.trim(),
+      },
+    );
+    final userJson = payload['user'];
+    if (userJson is! Map<String, dynamic>) {
+      throw const FormatException('Invalid profile-update response.');
+    }
+    return AuthUser.fromJson(userJson);
   }
 
   @override
