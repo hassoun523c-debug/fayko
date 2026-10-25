@@ -18,6 +18,11 @@ import '../features/users/data/users_repository.dart';
 import '../features/users/presentation/user_search_screen.dart';
 import '../features/users/presentation/blocked_users_screen.dart';
 
+const vemblixPreviewMode = bool.fromEnvironment(
+  'VEMBLIX_PREVIEW_MODE',
+  defaultValue: false,
+);
+
 class FaykoApp extends StatelessWidget {
   const FaykoApp({
     super.key,
@@ -171,6 +176,26 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<void> _restoreSession() async {
+    if (vemblixPreviewMode) {
+      if (!mounted) return;
+      setState(() {
+        _session = const AuthSession(
+          user: AuthUser(
+            id: 'vemblix-preview-user',
+            username: 'vemblix_demo',
+            email: 'preview@vemblix.local',
+            displayName: 'زائر Vemblix',
+            bio: 'حساب تجريبي للمعاينة فقط',
+            interests: [],
+          ),
+          accessToken: 'preview-token-not-for-real-api',
+        );
+        _restoring = false;
+        _startupError = null;
+      });
+      return;
+    }
+
     try {
       final session = await _authRepository.restoreSession();
       if (session != null) _chatRealtime.connect(session.accessToken);
@@ -365,8 +390,18 @@ class _AuthGateState extends State<AuthGate> {
           'Vemblix',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
-        actions: const [
-          Padding(
+        actions: [
+          if (vemblixPreviewMode)
+            const Padding(
+              padding: EdgeInsetsDirectional.only(end: 8),
+              child: Center(
+                child: Text(
+                  'نسخة معاينة',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF8B5CF6)),
+                ),
+              ),
+            ),
+          const Padding(
             padding: EdgeInsetsDirectional.only(end: 16),
             child: Center(
               child: Text(
