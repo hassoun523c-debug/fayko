@@ -7,7 +7,7 @@ import { createPostsRouter } from './routes/posts.js';
 import { createUsersRouter } from './routes/users.js';
 import { createConversationsRouter } from './routes/conversations.js';
 
-export function createApp({ pool, jwtSecret }) {
+export function createApp({ pool, jwtSecret, io = null }) {
   const app = express();
   const allowedOrigins = (process.env.CORS_ORIGINS ?? '')
     .split(',')
@@ -66,7 +66,7 @@ export function createApp({ pool, jwtSecret }) {
   );
   app.use('/api/v1/posts', createPostsRouter({ pool, jwtSecret }));
   app.use('/api/v1/users', createUsersRouter({ pool, jwtSecret }));
-  app.use('/api/v1/conversations', createConversationsRouter({ pool, jwtSecret }));
+  app.use('/api/v1/conversations', createConversationsRouter({ pool, jwtSecret, io }));
 
   app.use((_req, res) => {
     return res.status(404).json({
