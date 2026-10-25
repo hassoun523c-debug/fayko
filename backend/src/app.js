@@ -7,8 +7,9 @@ import { createPostsRouter } from './routes/posts.js';
 import { createUsersRouter } from './routes/users.js';
 import { createConversationsRouter } from './routes/conversations.js';
 import { createReportsRouter } from './routes/reports.js';
+import { createReelsRouter } from './routes/reels.js';
 
-export function createApp({ pool, jwtSecret, io = null }) {
+export function createApp({ pool, jwtSecret, io = null, mediaStorage = null }) {
   const app = express();
   const allowedOrigins = (process.env.CORS_ORIGINS ?? '')
     .split(',')
@@ -69,6 +70,7 @@ export function createApp({ pool, jwtSecret, io = null }) {
   app.use('/api/v1/users', createUsersRouter({ pool, jwtSecret, io }));
   app.use('/api/v1/conversations', createConversationsRouter({ pool, jwtSecret, io }));
   app.use('/api/v1/reports', createReportsRouter({ pool, jwtSecret }));
+  app.use('/api/v1/reels', createReelsRouter({ pool, jwtSecret, mediaStorage }));
 
   app.use((_req, res) => {
     return res.status(404).json({
