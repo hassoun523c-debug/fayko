@@ -9,6 +9,29 @@ const passwordSchema = z
     'Password is too long when encoded.',
   );
 
+export const interestValues = [
+  'sports',
+  'gaming',
+  'entertainment',
+  'religion',
+  'education',
+  'design',
+  'technology',
+  'news',
+  'fashion',
+  'cooking',
+  'travel',
+  'science',
+  'comedy',
+  'art',
+  'global_trends',
+];
+
+export const interestsSchema = z
+  .array(z.enum(interestValues))
+  .max(15)
+  .refine((values) => new Set(values).size === values.length, 'Interests must be unique.');
+
 export const registerSchema = z.object({
   username: z
     .string()
@@ -42,6 +65,7 @@ export const profileUpdateSchema = z
     displayName: z.string().trim().min(1).max(60).optional(),
     bio: z.string().trim().max(160).optional(),
     avatarUrl: z.union([z.string().url().max(2048), z.null()]).optional(),
+    interests: interestsSchema.optional(),
   })
   .strict()
   .refine(
