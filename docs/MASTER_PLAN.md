@@ -43,7 +43,8 @@ Planned feature modules:
 - [x] Add direct-conversation/message schema and versioned API endpoints.
 - [ ] Apply the schema to a running PostgreSQL instance and verify it with integration tests.
 - [ ] Define and test a repeatable migration process for future schema changes.
-- [ ] Add refresh-token rotation, server-side session revocation, audit logging, shared rate limiting, backups, and monitoring.
+- [x] Add server-side session records, active-session checks, and logout revocation for HTTP and Socket.IO (CI verification pending).
+- [ ] Add refresh-token rotation, session/device listing, audit logging, shared rate limiting, backups, and monitoring.
 - [ ] Verify Flutter authentication and feed against a running API end-to-end.
 - [x] Add Flutter user-search and follow/unfollow UI (end-to-end verification pending).
 - [x] Add JWT-authenticated Socket.IO rooms for direct conversations, persisted message events, and inbox updates (CI verification pending).
