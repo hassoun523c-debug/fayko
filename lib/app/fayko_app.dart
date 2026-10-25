@@ -5,6 +5,8 @@ import '../core/storage/token_store.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/auth/domain/auth_user.dart';
 import '../features/auth/presentation/auth_screen.dart';
+import '../features/chat/data/chat_repository.dart';
+import '../features/chat/presentation/chat_screens.dart';
 import '../features/feed/data/feed_repository.dart';
 import '../features/feed/presentation/feed_screen.dart';
 import '../features/profile/presentation/edit_profile_dialog.dart';
@@ -17,11 +19,13 @@ class FaykoApp extends StatelessWidget {
     this.authRepository,
     this.feedRepository,
     this.usersRepository,
+    this.chatRepository,
   });
 
   final AuthRepository? authRepository;
   final FeedRepository? feedRepository;
   final UsersRepository? usersRepository;
+  final ChatRepository? chatRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +80,7 @@ class FaykoApp extends StatelessWidget {
           authRepository: authRepository,
           feedRepository: feedRepository,
           usersRepository: usersRepository,
+          chatRepository: chatRepository,
         ),
       ),
     );
@@ -88,11 +93,13 @@ class AuthGate extends StatefulWidget {
     this.authRepository,
     this.feedRepository,
     this.usersRepository,
+    this.chatRepository,
   });
 
   final AuthRepository? authRepository;
   final FeedRepository? feedRepository;
   final UsersRepository? usersRepository;
+  final ChatRepository? chatRepository;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -103,6 +110,7 @@ class _AuthGateState extends State<AuthGate> {
   late final AuthRepository _authRepository;
   late final FeedRepository _feedRepository;
   late final UsersRepository _usersRepository;
+  late final ChatRepository _chatRepository;
   final GlobalKey<FeedScreenState> _feedKey = GlobalKey<FeedScreenState>();
 
   AuthSession? _session;
@@ -125,6 +133,8 @@ class _AuthGateState extends State<AuthGate> {
         RemoteFeedRepository(apiClient: _apiClient);
     _usersRepository = widget.usersRepository ??
         RemoteUsersRepository(apiClient: _apiClient);
+    _chatRepository = widget.chatRepository ??
+        RemoteChatRepository(apiClient: _apiClient);
     _restoreSession();
   }
 
@@ -301,6 +311,7 @@ class _AuthGateState extends State<AuthGate> {
                     child: UserSearchScreen(
                       session: session,
                       repository: _usersRepository,
+                      chatRepository: _chatRepository,
                     ),
                   ),
                 ),
@@ -324,10 +335,9 @@ class _AuthGateState extends State<AuthGate> {
             title: 'فايكو ريلز',
             description: 'الفيديوهات القصيرة تحتاج مرحلة رفع ومعالجة الفيديو.',
           ),
-          const _ComingSoon(
-            icon: Icons.chat_bubble_outline,
-            title: 'المحادثات',
-            description: 'نظام الرسائل اللحظية والتسليم والإشعارات لم يكتمل بعد.',
+          ChatListScreen(
+            session: session,
+            repository: _chatRepository,
           ),
           _ProfileScreen(
             user: session.user,
