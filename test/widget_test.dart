@@ -165,6 +165,7 @@ class _FakeFeedRepository implements FeedRepository {
   Future<FeedPost> createPost({
     required String accessToken,
     required String body,
+    String category = 'general',
   }) async =>
       throw UnimplementedError();
 
