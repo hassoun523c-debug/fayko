@@ -1,0 +1,39 @@
+name: Deploy Fayko Interactive Preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "demo/**"
+      - ".github/workflows/deploy-demo.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "fayko-pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload preview website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: demo
+      - name: Publish preview
+        id: deployment
+        uses: actions/deploy-pages@v4
