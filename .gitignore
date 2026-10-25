@@ -1,0 +1,20 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Platform-generated files and secrets
+android/local.properties
+ios/Flutter/Generated.xcconfig
+.env
+.env.*
+!.env.example
