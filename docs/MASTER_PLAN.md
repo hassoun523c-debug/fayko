@@ -12,13 +12,12 @@ This is the living engineering checklist. Items are not considered complete unti
 
 ## 1. Flutter foundation
 - [x] Add initial Flutter package manifest.
-- [x] Add an Arabic RTL app shell with dark/light themes.
-- [x] Add first navigation destinations and placeholder states.
-- [ ] Generate and verify full Android/iOS platform folders with Flutter tooling.
+- [x] Add an Arabic RTL app shell with dark theme and initial navigation.
+- [ ] Generate and verify full Android platform files with Flutter tooling.
 - [ ] Add Cairo or Tajawal font assets and configure typography.
 - [ ] Add localization using Flutter's generated localization workflow.
 - [ ] Adopt feature-first Clean Architecture and a state-management standard.
-- [ ] Add unit/widget tests, formatting, and CI checks.
+- [ ] Verify widget tests, formatting, analysis, and CI checks (test source added; CI result pending).
 
 ## 2. App architecture
 Planned feature modules:
@@ -38,12 +37,15 @@ Planned feature modules:
 Each feature should separate data, domain, and presentation layers where complexity warrants it.
 
 ## 3. Backend and data
-- [ ] Choose NestJS or Go based on deployment and team capability.
-- [ ] Define API contracts and versioning.
-- [ ] PostgreSQL schema and migrations for accounts, follows, posts, reactions, comments, and settings.
+- [x] Choose Node.js 22 / Express 5 and PostgreSQL for the first backend iteration.
+- [x] Add versioned API routes for authentication, profile updates, posts, likes, and comments.
+- [x] Add an initial PostgreSQL schema for users, posts, likes, comments, and follows.
+- [ ] Apply and verify the migration against a live PostgreSQL instance; define a controlled migration process for updates.
 - [ ] Evaluate whether a second message store is needed; start simple until scale requires it.
-- [ ] Authentication, rate limits, input validation, audit logging, backups, and monitoring.
-- [ ] WebSocket events for presence, typing, delivery, and read receipts.
+- [ ] Add session revocation/refresh-token rotation, audit logging, shared rate limiting, backups, and monitoring.
+- [ ] Connect Flutter authentication, profile, and feed to the API.
+- [ ] Add user search and follow/unfollow API endpoints.
+- [ ] Add WebSocket events for presence, typing, delivery, and read receipts.
 
 ## 4. Media and delivery
 - [ ] Object storage with private-by-default access and signed uploads/downloads.
@@ -82,9 +84,9 @@ Each feature should separate data, domain, and presentation layers where complex
 ## 9. Release readiness
 - [ ] Accessibility, RTL review, low-bandwidth testing, and performance profiling.
 - [ ] Security review and dependency updates.
-- [ ] Automated tests and CI build.
+- [ ] Automated tests and CI passing.
 - [ ] Android internal testing, crash reporting, and staged rollout.
 - [ ] iOS signing and TestFlight when an appropriate Apple build environment is available.
 
 ## Current status
-The repository now includes an initial Flutter source shell, a master implementation checklist, and a public-source competitor research document. It is not yet a complete or verified runnable Flutter platform project: Flutter tooling has not generated and validated the platform folders and no full app build/test has been confirmed.
+The repository contains an early Flutter shell and an initial Node.js/Express API with PostgreSQL schema and unit tests. The API includes registration/login, profile updates, text posts, likes, comments, and a paginated feed. The Flutter client is not yet connected to it. CI workflows have been added for Flutter validation and API tests, but their success must be verified before treating checks as passed. No APK is being built in this stage.
