@@ -264,10 +264,10 @@ class FeedScreenState extends State<FeedScreen> {
               icon: Icons.dynamic_feed_outlined,
               title: 'ماكو منشورات لحد الآن',
               description: 'اكتب أول منشور حتى يبدأ محتوى فايكو بالظهور هنا.',
-            ),
+            )
           else if (_visiblePosts.isEmpty)
             const _FeedStatus(
-              icon: Icons.filter_list_off_outlined,
+              icon: Icons.filter_list,
               title: 'ماكو منشورات بهالتصنيف بعد',
               description: 'جرّب تصنيفاً آخر أو ارجع إلى «الكل».',
             ),
