@@ -10,6 +10,7 @@ import '../features/chat/data/chat_realtime.dart';
 import '../features/chat/presentation/chat_screens.dart';
 import '../features/feed/data/feed_repository.dart';
 import '../features/feed/presentation/feed_screen.dart';
+import '../features/reels/presentation/reels_screen.dart';
 import '../features/profile/presentation/edit_profile_dialog.dart';
 import '../features/users/data/users_repository.dart';
 import '../features/users/presentation/user_search_screen.dart';
@@ -283,6 +284,41 @@ class _AuthGateState extends State<AuthGate> {
     );
   }
 
+  Future<bool> _updateInterests(List<String> interests) async {
+    final currentSession = _session;
+    if (currentSession == null) return false;
+
+    try {
+      final payload = await _apiClient.patch(
+        '/auth/me',
+        token: currentSession.accessToken,
+        body: {'interests': interests},
+      );
+      final rawUser = payload['user'];
+      if (rawUser is! Map<String, dynamic>) {
+        throw const FormatException('Invalid interests response.');
+      }
+      if (!mounted) return false;
+      setState(() {
+        _session = AuthSession(
+          user: AuthUser.fromJson(rawUser),
+          accessToken: currentSession.accessToken,
+        );
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم حفظ اهتماماتك بحسابك.')),
+      );
+      return true;
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_friendlyError(error, 'تعذر حفظ الاهتمامات.'))),
+        );
+      }
+      return false;
+    }
+  }
+
   String _friendlyError(Object error, String fallback) {
     if (error is ApiException) return error.message;
     if (error is FormatException) {
@@ -346,10 +382,9 @@ class _AuthGateState extends State<AuthGate> {
             session: session,
             repository: _feedRepository,
           ),
-          const _ComingSoon(
-            icon: Icons.play_circle_outline,
-            title: 'فايكو ريلز',
-            description: 'الفيديوهات القصيرة تحتاج مرحلة رفع ومعالجة الفيديو.',
+          ReelsScreen(
+            user: session.user,
+            onSaveInterests: _updateInterests,
           ),
           ChatListScreen(
             key: _chatKey,
@@ -512,36 +547,3 @@ class _ProfileScreen extends StatelessWidget {
   }
 }
 
-class _ComingSoon extends StatelessWidget {
-  const _ComingSoon({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 56, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(description, textAlign: TextAlign.center),
-          ],
-        ),
-      ),
-    );
-  }
-}
