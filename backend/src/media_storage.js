@@ -58,13 +58,24 @@ export function createMediaStorage(env = process.env) {
       );
     },
     async headObject({ key }) {
-      const result = await client.send(
-        new HeadObjectCommand({ Bucket: bucket, Key: key }),
-      );
-      return {
-        sizeBytes: Number(result.ContentLength ?? 0),
-        contentType: result.ContentType ?? '',
-      };
+      try {
+        const result = await client.send(
+          new HeadObjectCommand({ Bucket: bucket, Key: key }),
+        );
+        return {
+          sizeBytes: Number(result.ContentLength ?? 0),
+          contentType: result.ContentType ?? '',
+        };
+      } catch (error) {
+        if (
+          error?.$metadata?.httpStatusCode === 404 ||
+          error?.name === 'NotFound' ||
+          error?.name === 'NoSuchKey'
+        ) {
+          return null;
+        }
+        throw error;
+      }
     },
     async deleteObject({ key }) {
       await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
