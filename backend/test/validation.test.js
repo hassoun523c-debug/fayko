@@ -9,7 +9,6 @@ import {
   registerSchema,
   reportSchema,
   interestsSchema,
-  postSchema,
 } from '../src/validation.js';
 
 test('registration trims and normalizes account identifiers', () => {
