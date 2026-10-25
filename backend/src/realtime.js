@@ -23,19 +23,35 @@ export function attachRealtimeGateway({ httpServer, pool, jwtSecret }) {
     pingTimeout: 20_000,
   });
 
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token;
     if (typeof token !== 'string' || token.length > 4096) {
       return next(new Error('authentication_required'));
     }
 
+    let principal;
     try {
-      const principal = verifyAccessToken(token, jwtSecret);
-      socket.data.userId = principal.userId;
-      socket.data.sessionId = principal.sessionId;
-      return next();
+      principal = verifyAccessToken(token, jwtSecret);
     } catch {
       return next(new Error('invalid_access_token'));
+    }
+
+    try {
+      const result = await pool.query(
+        'SELECT expires_at FROM user_sessions WHERE id = $1 AND user_id = $2 ' +
+          'AND revoked_at IS NULL AND expires_at > NOW() LIMIT 1',
+        [principal.sessionId, principal.userId],
+      );
+      if (result.rows.length === 0) {
+        return next(new Error('session_revoked_or_expired'));
+      }
+
+      socket.data.userId = principal.userId;
+      socket.data.sessionId = principal.sessionId;
+      socket.data.sessionExpiresAt = new Date(result.rows[0].expires_at).getTime();
+      return next();
+    } catch {
+      return next(new Error('authentication_unavailable'));
     }
   });
 
@@ -43,6 +59,10 @@ export function attachRealtimeGateway({ httpServer, pool, jwtSecret }) {
     const userId = socket.data.userId;
     socket.join('user:' + userId);
     socket.join('session:' + socket.data.sessionId);
+    const expiryDelay = Math.max(0, socket.data.sessionExpiresAt - Date.now());
+    const expiryTimer = setTimeout(() => socket.disconnect(true), expiryDelay);
+    expiryTimer.unref();
+    socket.on('disconnect', () => clearTimeout(expiryTimer));
 
     socket.on('conversation:join', async (payload, acknowledge) => {
       const ack = typeof acknowledge === 'function' ? acknowledge : () => {};
