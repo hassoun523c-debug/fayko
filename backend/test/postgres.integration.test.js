@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import pg from 'pg';
 import { createApp } from '../src/app.js';
+import { runMigrations } from '../src/migrations.js';
 
 const { Pool } = pg;
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -15,11 +15,7 @@ test(
   { skip: !databaseUrl },
   async () => {
     const pool = new Pool({ connectionString: databaseUrl });
-    const schema = await readFile(
-      new URL('../db/001_init.sql', import.meta.url),
-      'utf8',
-    );
-    await pool.query(schema);
+    await runMigrations(pool);
 
     const app = createApp({ pool, jwtSecret });
     const server = app.listen(0, '127.0.0.1');
