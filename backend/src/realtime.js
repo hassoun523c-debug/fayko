@@ -41,6 +41,7 @@ export function attachRealtimeGateway({ httpServer, pool, jwtSecret }) {
   io.on('connection', (socket) => {
     const userId = socket.data.userId;
     socket.join('user:' + userId);
+    socket.join('session:' + socket.data.sessionId);
 
     socket.on('conversation:join', async (payload, acknowledge) => {
       const ack = typeof acknowledge === 'function' ? acknowledge : () => {};
