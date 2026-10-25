@@ -45,7 +45,7 @@ async function requireMembership(pool, conversationId, userId) {
 
 export function createConversationsRouter({ pool, jwtSecret, io = null }) {
   const router = express.Router();
-  router.use(requireAuth(jwtSecret));
+  router.use(requireAuth(jwtSecret, pool));
 
   router.get('/', async (req, res) => {
     const result = await pool.query(
