@@ -6,7 +6,8 @@ This is the living engineering checklist. Items are not considered complete unti
 - [x] Add initial competitor research and strategy document: [COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md).
 - [ ] Validate the first target audience and the single most important problem Fayko should solve.
 - [ ] Confirm minimum supported Android version and release target.
-- [ ] Define community rules, reporting, blocking, and abuse-response flows.
+- [x] Add initial block/unblock, report submission and blocked-account listing code (review queue and operational policy still pending).
+- [ ] Define community rules, moderator access controls, appeals, abuse-response SLAs, and privacy processes.
 - [ ] Define data retention, account deletion, export, and privacy policy.
 - [ ] Never commit secrets, signing keys, API keys, or production credentials.
 
@@ -62,7 +63,8 @@ Planned feature modules:
 - [x] Implement basic text posts, likes/unlikes and comments in API/client code (pending end-to-end verification).
 - [ ] Add nested comments, reposts and polls.
 - [ ] Add stories, 24-hour expiry and replies.
-- [ ] Add feed ranking, moderation, reporting and blocking.
+- [x] Add baseline report/block API and block-aware feed/profile/chat access (integration verification pending).
+- [ ] Add moderator review console, report triage, rate limits, and full moderation workflows.
 - [ ] Add robust cursor pagination in Flutter (API supports cursor paging; client currently loads the first page).
 
 ## 6. Chat and calls
