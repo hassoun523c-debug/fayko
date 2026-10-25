@@ -95,20 +95,23 @@ class _ReelsScreenState extends State<ReelsScreen> {
                 runSpacing: 8,
                 children: [
                   for (final category in _categories)
-                    FilterChip(
-                      key: ValueKey('interest-\${category.id}'),
-                      avatar: Icon(category.icon, size: 18),
-                      label: Text(category.label),
-                      selected: _selected.contains(category.id),
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            _selected.add(category.id);
-                          } else {
-                            _selected.remove(category.id);
-                          }
-                        });
-                      },
+                    Tooltip(
+                      message: category.description,
+                      child: FilterChip(
+                        key: ValueKey('interest-${category.id}'),
+                        avatar: Icon(category.icon, size: 18),
+                        label: Text(category.label),
+                        selected: _selected.contains(category.id),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selected.add(category.id);
+                            } else {
+                              _selected.remove(category.id);
+                            }
+                          });
+                        },
+                      ),
                     ),
                 ],
               ),
@@ -124,7 +127,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.save_outlined),
-                  label: Text(_saving ? 'جاري الحفظ...' : 'حفظ اهتماماتي (\${_selected.length})'),
+                  label: Text(_saving ? 'جاري الحفظ...' : 'حفظ اهتماماتي (${_selected.length})'),
                 ),
               ),
             ],
