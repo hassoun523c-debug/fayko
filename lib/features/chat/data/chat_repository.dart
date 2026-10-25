@@ -72,7 +72,7 @@ class RemoteChatRepository implements ChatRepository {
     required String conversationId,
   }) async {
     final payload = await _apiClient.get(
-      '/conversations/' + conversationId + '/messages',
+      '/conversations/$conversationId/messages',
       token: accessToken,
       queryParameters: {'limit': '50'},
     );
@@ -94,7 +94,7 @@ class RemoteChatRepository implements ChatRepository {
     required String body,
   }) async {
     final payload = await _apiClient.post(
-      '/conversations/' + conversationId + '/messages',
+      '/conversations/$conversationId/messages',
       token: accessToken,
       body: {'body': body},
     );
