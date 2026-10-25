@@ -207,7 +207,7 @@ class FeedScreenState extends State<FeedScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'أهلاً بك في فايكو، ${widget.session.user.displayName} 👋',
+                    'أهلاً بك في Vemblix، ${widget.session.user.displayName} 👋',
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
