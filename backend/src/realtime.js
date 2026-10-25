@@ -74,7 +74,12 @@ export function attachRealtimeGateway({ httpServer, pool, jwtSecret }) {
 
       try {
         const result = await pool.query(
-          'SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2',
+          'SELECT 1 FROM conversation_members mine ' +
+            'WHERE mine.conversation_id = $1 AND mine.user_id = $2 ' +
+            'AND NOT EXISTS (SELECT 1 FROM conversation_members peer JOIN user_blocks b ON ' +
+            '((b.blocker_id = $2 AND b.blocked_id = peer.user_id) OR ' +
+            '(b.blocker_id = peer.user_id AND b.blocked_id = $2)) ' +
+            'WHERE peer.conversation_id = mine.conversation_id AND peer.user_id <> $2)',
           [parsed.data, userId],
         );
         if (result.rows.length === 0) {
