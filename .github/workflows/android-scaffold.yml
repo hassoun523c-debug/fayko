@@ -30,21 +30,20 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Generate Android platform files if missing
+      - name: Generate or refresh Android platform files
         run: |
-          if [ -d android ]; then
-            echo "Android platform files already exist; nothing to generate."
-            exit 0
-          fi
           flutter create --platforms=android --org com.fayko --project-name fayko .
 
-      - name: Commit only generated Android files
+      - name: Commit Android platform files and Gradle wrapper
         run: |
-          if [ -d android ] && [ -z "$(git status --porcelain -- android)" ]; then
-            echo "No Android file changes to commit."
+          git add android/
+          for file in android/gradlew android/gradlew.bat android/gradle/wrapper/gradle-wrapper.jar; do
+            if [ -f "$file" ]; then git add -f "$file"; fi
+          done
+          if git diff --cached --quiet; then
+            echo "No Android platform file changes to commit."
             exit 0
           fi
-          git add android/
           if git diff --cached --quiet; then
             echo "No generated Android files to commit."
             exit 0
