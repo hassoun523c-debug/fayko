@@ -65,8 +65,8 @@ void main() {
 
         if (request.url.path ==
             '/api/v1/conversations/conversation-test/messages') {
-          expect(request.url.queryParameters['limit'], '50');
           if (request.method == 'GET') {
+            expect(request.url.queryParameters['limit'], '50');
             return http.Response(
               jsonEncode({
                 'messages': [
@@ -124,7 +124,7 @@ void main() {
         );
       }),
     );
-    const repository = RemoteChatRepository(apiClient: api);
+    final repository = RemoteChatRepository(apiClient: api);
 
     final conversations = await repository.loadConversations(
       accessToken: 'chat-test-token',
