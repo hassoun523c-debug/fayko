@@ -34,7 +34,6 @@ export function createMediaStorage(env = process.env) {
   const client = new S3Client({
     region: env.R2_REGION ?? env.S3_REGION ?? 'auto',
     endpoint: parsedEndpoint.toString().replace(/\/$/, ''),
-    forcePathStyle: true,
     credentials: { accessKeyId, secretAccessKey },
   });
 
