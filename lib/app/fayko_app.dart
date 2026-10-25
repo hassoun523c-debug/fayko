@@ -6,6 +6,7 @@ import '../features/auth/data/auth_repository.dart';
 import '../features/auth/domain/auth_user.dart';
 import '../features/auth/presentation/auth_screen.dart';
 import '../features/chat/data/chat_repository.dart';
+import '../features/chat/data/chat_realtime.dart';
 import '../features/chat/presentation/chat_screens.dart';
 import '../features/feed/data/feed_repository.dart';
 import '../features/feed/presentation/feed_screen.dart';
@@ -20,12 +21,14 @@ class FaykoApp extends StatelessWidget {
     this.feedRepository,
     this.usersRepository,
     this.chatRepository,
+    this.chatRealtime,
   });
 
   final AuthRepository? authRepository;
   final FeedRepository? feedRepository;
   final UsersRepository? usersRepository;
   final ChatRepository? chatRepository;
+  final ChatRealtime? chatRealtime;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +84,7 @@ class FaykoApp extends StatelessWidget {
           feedRepository: feedRepository,
           usersRepository: usersRepository,
           chatRepository: chatRepository,
+          chatRealtime: chatRealtime,
         ),
       ),
     );
@@ -94,12 +98,14 @@ class AuthGate extends StatefulWidget {
     this.feedRepository,
     this.usersRepository,
     this.chatRepository,
+    this.chatRealtime,
   });
 
   final AuthRepository? authRepository;
   final FeedRepository? feedRepository;
   final UsersRepository? usersRepository;
   final ChatRepository? chatRepository;
+  final ChatRealtime? chatRealtime;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -111,6 +117,7 @@ class _AuthGateState extends State<AuthGate> {
   late final FeedRepository _feedRepository;
   late final UsersRepository _usersRepository;
   late final ChatRepository _chatRepository;
+  late final ChatRealtime _chatRealtime;
   final GlobalKey<FeedScreenState> _feedKey = GlobalKey<FeedScreenState>();
   final GlobalKey<ChatListScreenState> _chatKey = GlobalKey<ChatListScreenState>();
 
@@ -136,11 +143,13 @@ class _AuthGateState extends State<AuthGate> {
         RemoteUsersRepository(apiClient: _apiClient);
     _chatRepository = widget.chatRepository ??
         RemoteChatRepository(apiClient: _apiClient);
+    _chatRealtime = widget.chatRealtime ?? SocketChatRealtimeClient();
     _restoreSession();
   }
 
   @override
   void dispose() {
+    _chatRealtime.disconnect();
     _apiClient.close();
     super.dispose();
   }
@@ -148,6 +157,7 @@ class _AuthGateState extends State<AuthGate> {
   Future<void> _restoreSession() async {
     try {
       final session = await _authRepository.restoreSession();
+      if (session != null) _chatRealtime.connect(session.accessToken);
       if (!mounted) return;
       setState(() {
         _session = session;
@@ -176,6 +186,7 @@ class _AuthGateState extends State<AuthGate> {
         identifier: identifier,
         password: password,
       );
+      _chatRealtime.connect(session.accessToken);
       if (!mounted) return;
       setState(() {
         _session = session;
@@ -211,6 +222,7 @@ class _AuthGateState extends State<AuthGate> {
         password: password,
         displayName: displayName,
       );
+      _chatRealtime.connect(session.accessToken);
       if (!mounted) return;
       setState(() {
         _session = session;
@@ -232,6 +244,7 @@ class _AuthGateState extends State<AuthGate> {
   Future<void> _logout() async {
     try {
       await _authRepository.logout();
+      _chatRealtime.disconnect();
       if (!mounted) return;
       setState(() {
         _session = null;
@@ -313,6 +326,7 @@ class _AuthGateState extends State<AuthGate> {
                       session: session,
                       repository: _usersRepository,
                       chatRepository: _chatRepository,
+                      realtime: _chatRealtime,
                     ),
                   ),
                 ),
@@ -340,6 +354,7 @@ class _AuthGateState extends State<AuthGate> {
             key: _chatKey,
             session: session,
             repository: _chatRepository,
+            realtime: _chatRealtime,
           ),
           _ProfileScreen(
             user: session.user,
