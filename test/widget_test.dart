@@ -225,8 +225,10 @@ void main() {
     await tester.tap(find.text('ريلز'));
     await tester.pumpAndSettle();
 
-    expect(find.text('فايكو ريلز'), findsOneWidget);
-    expect(find.textContaining('الفيديوهات القصيرة'), findsOneWidget);
+    expect(find.text('ذوقك في فايكو'), findsOneWidget);
+    expect(find.text('رياضة'), findsOneWidget);
+    expect(find.text('ترندات العالم'), findsOneWidget);
+    expect(find.text('تشغيل الريلز قيد التطوير'), findsOneWidget);
   });
 
   testWidgets('bottom navigation opens the chat section', (tester) async {
