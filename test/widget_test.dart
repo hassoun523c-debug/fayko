@@ -6,6 +6,9 @@ import 'package:fayko/features/auth/domain/auth_user.dart';
 import 'package:fayko/features/feed/data/feed_repository.dart';
 import 'package:fayko/features/feed/domain/feed_post.dart';
 import 'package:fayko/features/feed/presentation/feed_screen.dart';
+import 'package:fayko/features/reels/data/reels_repository.dart';
+import 'package:fayko/features/reels/domain/reel.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:fayko/features/users/data/users_repository.dart';
 import 'package:fayko/features/users/domain/public_user.dart';
 import 'package:fayko/main.dart';
@@ -204,6 +207,32 @@ class _FakeFeedRepository implements FeedRepository {
       throw UnimplementedError();
 }
 
+class _FakeReelsRepository implements ReelsRepository {
+  const _FakeReelsRepository();
+
+  @override
+  Future<ReelsFeed> loadReels({
+    required String accessToken,
+    String? category,
+  }) async =>
+      const ReelsFeed(reels: [], uploadEnabled: false);
+
+  @override
+  Future<Reel> uploadReel({
+    required String accessToken,
+    required XFile video,
+    required String category,
+    required String caption,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> deleteReel({
+    required String accessToken,
+    required String reelId,
+  }) async {}
+}
+
 Widget _app({bool authenticated = true}) {
   return FaykoApp(
     authRepository: _FakeAuthRepository(restore: authenticated),
@@ -211,6 +240,7 @@ Widget _app({bool authenticated = true}) {
     usersRepository: const _FakeUsersRepository(),
     chatRepository: const _FakeChatRepository(),
     chatRealtime: const NoopChatRealtime(),
+    reelsRepository: const _FakeReelsRepository(),
   );
 }
 
@@ -259,7 +289,7 @@ void main() {
     await tester.tap(find.text('ريلز'));
     await tester.pumpAndSettle();
 
-    expect(find.text('ذوقك في فايكو'), findsOneWidget);
+    expect(find.text('ريلز فايكو'), findsOneWidget);
     expect(find.text('رياضة'), findsOneWidget);
     expect(find.text('ترندات العالم'), findsOneWidget);
     expect(find.text('تشغيل الريلز قيد التطوير'), findsOneWidget);
