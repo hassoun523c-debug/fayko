@@ -21,7 +21,9 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "zod": "^4.1.11",
-    "socket.io": "^4.8.4"
+    "socket.io": "^4.8.4",
+    "@aws-sdk/client-s3": "^3.800.0",
+    "@aws-sdk/s3-request-presigner": "^3.800.0"
   },
   "devDependencies": {
     "socket.io-client": "^4.8.4"
