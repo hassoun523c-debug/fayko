@@ -25,6 +25,7 @@ class FeedPost {
   const FeedPost({
     required this.id,
     required this.body,
+    this.category = 'general',
     required this.author,
     required this.likesCount,
     required this.commentsCount,
@@ -34,6 +35,7 @@ class FeedPost {
 
   final String id;
   final String body;
+  final String category;
   final PostAuthor author;
   final int likesCount;
   final int commentsCount;
@@ -44,6 +46,7 @@ class FeedPost {
     return FeedPost(
       id: json['id'] as String,
       body: json['body'] as String,
+      category: (json['category'] as String?) ?? 'general',
       author: PostAuthor.fromJson(
         json['author'] as Map<String, dynamic>,
       ),
@@ -63,6 +66,7 @@ class FeedPost {
     return FeedPost(
       id: id,
       body: body,
+      category: category,
       author: author,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
@@ -97,3 +101,22 @@ class FeedComment {
     );
   }
 }
+
+String postCategoryLabel(String category) => switch (category) {
+      'sports' => 'رياضة',
+      'gaming' => 'ألعاب',
+      'entertainment' => 'ترفيه',
+      'religion' => 'ديني',
+      'education' => 'تعليم',
+      'design' => 'تصاميم',
+      'technology' => 'تقنية',
+      'news' => 'أخبار',
+      'fashion' => 'أزياء',
+      'cooking' => 'طبخ',
+      'travel' => 'سفر',
+      'science' => 'علوم',
+      'comedy' => 'كوميديا',
+      'art' => 'فنون',
+      'global_trends' => 'ترندات العالم',
+      _ => 'عام',
+    };
