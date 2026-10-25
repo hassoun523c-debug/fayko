@@ -188,6 +188,20 @@ test(
       const reelUpload = await reelUploadUrlResponse.json();
       assert.ok(reelUpload.objectKey.startsWith(first.user.id + '/'));
       assert.match(reelUpload.uploadUrl, /^https:\/\/upload\.example\.test\//);
+
+      const prematurePublishResponse = await request('/api/v1/reels', {
+        method: 'POST',
+        token: first.accessToken,
+        body: {
+          objectKey: reelUpload.objectKey,
+          caption: 'فيديو لم يُرفع بعد',
+          category: 'gaming',
+          contentType: 'video/mp4',
+          fileSizeBytes: 1024,
+        },
+      });
+      assert.equal(prematurePublishResponse.status, 422);
+
       storedObjects.set(reelUpload.objectKey, {
         sizeBytes: 1024,
         contentType: 'video/mp4',
