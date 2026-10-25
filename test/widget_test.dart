@@ -1,4 +1,6 @@
 import 'package:fayko/features/auth/data/auth_repository.dart';
+import 'package:fayko/features/chat/data/chat_repository.dart';
+import 'package:fayko/features/chat/domain/chat_conversation.dart';
 import 'package:fayko/features/auth/domain/auth_user.dart';
 import 'package:fayko/features/feed/data/feed_repository.dart';
 import 'package:fayko/features/feed/domain/feed_post.dart';
@@ -17,6 +19,16 @@ const _user = AuthUser(
   bio: '',
 );
 const _session = AuthSession(user: _user, accessToken: 'test-token');
+const _publicCurrentUser = PublicUser(
+  id: 'bb27c8a6-8c1a-4686-9478-33a7a7b7c3e1',
+  username: 'hassoun',
+  displayName: 'حيدر',
+  bio: '',
+  postsCount: 0,
+  followersCount: 0,
+  followingCount: 0,
+  isFollowing: false,
+);
 const _otherUser = PublicUser(
   id: 'f7f0d84d-a8f4-4666-8f13-1f1145483b2c',
   username: 'test_user',
@@ -62,6 +74,45 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {}
+}
+
+class _FakeChatRepository implements ChatRepository {
+  const _FakeChatRepository();
+
+  @override
+  Future<List<ChatConversation>> loadConversations({
+    required String accessToken,
+  }) async =>
+      [];
+
+  @override
+  Future<String> openDirect({
+    required String accessToken,
+    required String userId,
+  }) async =>
+      'conversation-test';
+
+  @override
+  Future<List<ChatMessage>> loadMessages({
+    required String accessToken,
+    required String conversationId,
+  }) async =>
+      [];
+
+  @override
+  Future<ChatMessage> sendMessage({
+    required String accessToken,
+    required String conversationId,
+    required String body,
+  }) async =>
+      ChatMessage(
+        id: 'sent-message',
+        body: body,
+        senderId: _user.id,
+        sender: _publicCurrentUser,
+        createdAt: DateTime.now(),
+        isMine: true,
+      );
 }
 
 class _FakeUsersRepository implements UsersRepository {
@@ -123,6 +174,7 @@ Widget _app({bool authenticated = true}) {
     authRepository: _FakeAuthRepository(restore: authenticated),
     feedRepository: const _FakeFeedRepository(),
     usersRepository: const _FakeUsersRepository(),
+    chatRepository: const _FakeChatRepository(),
   );
 }
 
@@ -162,7 +214,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('المحادثات'), findsOneWidget);
-    expect(find.textContaining('نظام الرسائل اللحظية'), findsOneWidget);
+    expect(find.text('ماكو محادثات بعد'), findsOneWidget);
+  });
+
+  testWidgets('text messages can be sent from a direct chat', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('البحث عن المستخدمين'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'test');
+    await tester.tap(find.byTooltip('بحث'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('مستخدم للاختبار'));
+    await tester.pumpAndSettle();
+    expect(find.text('هذه بداية المحادثة. اكتب أول رسالة.'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).last, 'رسالة اختبار');
+    await tester.tap(find.byTooltip('إرسال الرسالة'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('رسالة اختبار'), findsOneWidget);
   });
 
   testWidgets('user search displays matching users and follows them', (
