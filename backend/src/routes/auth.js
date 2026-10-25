@@ -15,7 +15,7 @@ import {
 } from '../validation.js';
 
 const publicUserColumns =
-  'id, username, email, display_name, bio, avatar_url, created_at, updated_at';
+  'id, username, email, display_name, bio, avatar_url, interests, created_at, updated_at';
 
 function formatUser(row) {
   return {
@@ -25,6 +25,7 @@ function formatUser(row) {
     displayName: row.display_name,
     bio: row.bio,
     avatarUrl: row.avatar_url,
+    interests: Array.isArray(row.interests) ? row.interests : [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -164,6 +165,7 @@ export function createAuthRouter({ pool, jwtSecret, authRateLimit, io = null }) 
         'display_name = CASE WHEN $2::boolean THEN $3 ELSE display_name END, ' +
         'bio = CASE WHEN $4::boolean THEN $5 ELSE bio END, ' +
         'avatar_url = CASE WHEN $6::boolean THEN $7 ELSE avatar_url END, ' +
+        'interests = CASE WHEN $8::boolean THEN $9::text[] ELSE interests END, ' +
         'updated_at = NOW() WHERE id = $1 RETURNING ' +
         publicUserColumns,
       [
@@ -174,6 +176,8 @@ export function createAuthRouter({ pool, jwtSecret, authRateLimit, io = null }) 
         data.bio ?? null,
         Object.hasOwn(data, 'avatarUrl'),
         data.avatarUrl ?? null,
+        Object.hasOwn(data, 'interests'),
+        data.interests ?? null,
       ],
     );
 
