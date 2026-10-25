@@ -46,7 +46,8 @@ Planned feature modules:
 - [ ] Add refresh-token rotation, server-side session revocation, audit logging, shared rate limiting, backups, and monitoring.
 - [ ] Verify Flutter authentication and feed against a running API end-to-end.
 - [x] Add Flutter user-search and follow/unfollow UI (end-to-end verification pending).
-- [ ] Add WebSocket events for presence, typing, delivery, and read receipts.
+- [x] Add JWT-authenticated Socket.IO rooms for direct conversations, persisted message events, and inbox updates (CI verification pending).
+- [ ] Add presence, typing, detailed delivery/read-receipt semantics, socket session expiry handling, and reconnect/offline reconciliation.
 
 ## 4. Media and delivery
 - [ ] Add object storage with private-by-default access and signed uploads/downloads.
@@ -65,7 +66,8 @@ Planned feature modules:
 
 ## 6. Chat and calls
 - [x] Add persisted one-to-one text conversations, message history and basic unread/read markers (end-to-end validation pending).
-- [ ] Add realtime delivery, message delivery states, robust history pagination in Flutter, and offline queue.
+- [x] Add Socket.IO message delivery subscriptions and inbox refresh event handling in Flutter (CI verification pending).
+- [ ] Add message delivery states, robust history pagination in Flutter, and offline queue.
 - [ ] Review end-to-end encryption design; use audited protocol libraries.
 - [ ] Define disappearing-message semantics and limitations.
 - [ ] Add file sending and secure signed URLs.
@@ -95,4 +97,4 @@ Planned feature modules:
 - [ ] iOS signing and TestFlight when an appropriate Apple build environment is available.
 
 ## Current status
-The repository now contains Flutter authentication, text-feed, user-search/follow, and basic direct text-chat code plus a Node.js/Express API and versioned PostgreSQL migrations. The API/client combination has not yet been run end-to-end on Android, and CI results are pending. Android platform files have not been generated and validated. No APK is being built in this stage, by design.
+The repository now contains Flutter authentication, text-feed, user-search/follow, and basic direct text-chat code plus a Node.js/Express API and versioned PostgreSQL migrations. The API/client combination and Socket.IO tests have been added, but no passing CI result or end-to-end Android run has been confirmed. Android platform files have not been generated and validated. No APK is being built in this stage, by design.
