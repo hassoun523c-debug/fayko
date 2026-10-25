@@ -13,6 +13,7 @@ import '../features/feed/presentation/feed_screen.dart';
 import '../features/profile/presentation/edit_profile_dialog.dart';
 import '../features/users/data/users_repository.dart';
 import '../features/users/presentation/user_search_screen.dart';
+import '../features/users/presentation/blocked_users_screen.dart';
 
 class FaykoApp extends StatelessWidget {
   const FaykoApp({
@@ -357,7 +358,9 @@ class _AuthGateState extends State<AuthGate> {
             realtime: _chatRealtime,
           ),
           _ProfileScreen(
+            session: session,
             user: session.user,
+            usersRepository: _usersRepository,
             onLogout: _logout,
             onUpdateProfile: _updateProfile,
           ),
@@ -405,12 +408,16 @@ class _AuthGateState extends State<AuthGate> {
 
 class _ProfileScreen extends StatelessWidget {
   const _ProfileScreen({
+    required this.session,
     required this.user,
+    required this.usersRepository,
     required this.onLogout,
     required this.onUpdateProfile,
   });
 
+  final AuthSession session;
   final AuthUser user;
+  final UsersRepository usersRepository;
   final VoidCallback onLogout;
   final Future<void> Function(String displayName, String bio) onUpdateProfile;
 
@@ -455,6 +462,24 @@ class _ProfileScreen extends StatelessWidget {
           ),
           icon: const Icon(Icons.edit_outlined),
           label: const Text('تعديل الملف الشخصي'),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: BlockedUsersScreen(
+                    session: session,
+                    repository: usersRepository,
+                  ),
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.block_outlined),
+          label: const Text('الحسابات المحظورة'),
         ),
         const SizedBox(height: 10),
         Card(
