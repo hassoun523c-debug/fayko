@@ -341,12 +341,13 @@ export function createConversationsRouter({ pool, jwtSecret, io = null }) {
       isMine: true,
     };
 
-    // HTTP persists the message first; Socket.IO distributes only committed records.
-    io?.to(conversationId).emit('message:new', messagePayload);
     const members = await pool.query(
       'SELECT user_id FROM conversation_members WHERE conversation_id = $1',
       [conversationId],
     );
+
+    // HTTP persists the message first; Socket.IO distributes only committed records.
+    io?.to(conversationId).emit('message:new', messagePayload);
     for (const member of members.rows) {
       io?.to('user:' + member.user_id).emit('conversation:updated', {
         conversationId,
