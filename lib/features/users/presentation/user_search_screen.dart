@@ -26,6 +26,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   final Set<String> _busyUsers = <String>{};
   String? _error;
   String? _lastQuery;
+  int _requestVersion = 0;
 
   @override
   void dispose() {
@@ -34,10 +35,12 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   Future<void> _search() async {
+    final requestVersion = ++_requestVersion;
     final query = _controller.text.trim();
     if (query.length < 2) {
       setState(() {
         _users = const [];
+        _loading = false;
         _error = 'اكتب حرفين على الأقل للبحث.';
         _lastQuery = null;
       });
@@ -55,20 +58,22 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         accessToken: widget.session.accessToken,
         query: query,
       );
-      if (!mounted) return;
+      if (!mounted || requestVersion != _requestVersion) return;
       setState(() {
         _users = users;
         _error = null;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || requestVersion != _requestVersion) return;
       setState(() {
         _error = error is ApiException
             ? error.message
             : 'تعذر البحث عن المستخدمين.';
       });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && requestVersion == _requestVersion) {
+        setState(() => _loading = false);
+      }
     }
   }
 
