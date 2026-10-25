@@ -5,6 +5,13 @@ import '../../auth/domain/auth_user.dart';
 import '../data/feed_repository.dart';
 import '../domain/feed_post.dart';
 
+class NewPostDraft {
+  const NewPostDraft({required this.body, required this.category});
+
+  final String body;
+  final String category;
+}
+
 class FeedScreen extends StatefulWidget {
   const FeedScreen({
     super.key,
@@ -57,7 +64,7 @@ class FeedScreenState extends State<FeedScreen> {
   }
 
   Future<void> compose(BuildContext parentContext) async {
-    final body = await showModalBottomSheet<String>(
+    final draft = await showModalBottomSheet<NewPostDraft>(
       context: parentContext,
       isScrollControlled: true,
       showDragHandle: true,
@@ -68,12 +75,13 @@ class FeedScreenState extends State<FeedScreen> {
         child: const CreatePostSheet(),
       ),
     );
-    if (body == null || body.trim().isEmpty || !mounted) return;
+    if (draft == null || draft.body.trim().isEmpty || !mounted) return;
 
     try {
       final post = await widget.repository.createPost(
         accessToken: widget.session.accessToken,
-        body: body.trim(),
+        body: draft.body.trim(),
+        category: draft.category,
       );
       if (!mounted) return;
       setState(() {
@@ -269,6 +277,13 @@ class FeedScreenState extends State<FeedScreen> {
             ],
           ),
           const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Chip(
+              visualDensity: VisualDensity.compact,
+              label: Text(postCategoryLabel(post.category)),
+            ),
+          ),
           Text(
             post.body,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.45),
@@ -334,6 +349,7 @@ class CreatePostSheet extends StatefulWidget {
 
 class _CreatePostSheetState extends State<CreatePostSheet> {
   final _controller = TextEditingController();
+  String _selectedCategory = 'general';
 
   @override
   void dispose() {
@@ -355,6 +371,35 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedCategory,
+              decoration: const InputDecoration(
+                labelText: 'تصنيف المنشور',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'general', child: Text('عام')),
+                DropdownMenuItem(value: 'sports', child: Text('رياضة')),
+                DropdownMenuItem(value: 'gaming', child: Text('ألعاب')),
+                DropdownMenuItem(value: 'entertainment', child: Text('ترفيه')),
+                DropdownMenuItem(value: 'religion', child: Text('ديني')),
+                DropdownMenuItem(value: 'education', child: Text('تعليم')),
+                DropdownMenuItem(value: 'design', child: Text('تصاميم')),
+                DropdownMenuItem(value: 'technology', child: Text('تقنية')),
+                DropdownMenuItem(value: 'news', child: Text('أخبار')),
+                DropdownMenuItem(value: 'fashion', child: Text('أزياء')),
+                DropdownMenuItem(value: 'cooking', child: Text('طبخ')),
+                DropdownMenuItem(value: 'travel', child: Text('سفر')),
+                DropdownMenuItem(value: 'science', child: Text('علوم')),
+                DropdownMenuItem(value: 'comedy', child: Text('كوميديا')),
+                DropdownMenuItem(value: 'art', child: Text('فنون')),
+                DropdownMenuItem(value: 'global_trends', child: Text('ترندات العالم')),
+              ],
+              onChanged: (category) {
+                if (category != null) setState(() => _selectedCategory = category);
+              },
+            ),
+            const SizedBox(height: 12),
             TextField(
               controller: _controller,
               autofocus: true,
@@ -371,7 +416,11 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
             FilledButton.icon(
               onPressed: () {
                 final text = _controller.text.trim();
-                if (text.isNotEmpty) Navigator.of(context).pop(text);
+                if (text.isNotEmpty) {
+                  Navigator.of(context).pop(
+                    NewPostDraft(body: text, category: _selectedCategory),
+                  );
+                }
               },
               icon: const Icon(Icons.send),
               label: const Text('نشر'),
