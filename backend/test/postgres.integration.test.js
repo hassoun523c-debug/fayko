@@ -11,7 +11,7 @@ const databaseUrl = process.env.TEST_DATABASE_URL;
 const jwtSecret = 'integration-tests-use-a-secret-long-enough-for-hs256';
 
 test(
-  'account, profile, follow, post, like and comment flow against PostgreSQL',
+  'auth, social and private direct-message flow against PostgreSQL',
   { skip: !databaseUrl },
   async () => {
     const pool = new Pool({ connectionString: databaseUrl });
@@ -69,6 +69,19 @@ test(
       assert.equal(secondRegistration.status, 201);
       const second = await secondRegistration.json();
       accountIds.push(second.user.id);
+
+      const thirdRegistration = await request('/api/v1/auth/register', {
+        method: 'POST',
+        body: {
+          username: 'it3_' + suffix,
+          email: 'third_' + suffix + '@example.test',
+          password: 'integration-test-password-2026',
+          displayName: 'حساب ثالث',
+        },
+      });
+      assert.equal(thirdRegistration.status, 201);
+      const third = await thirdRegistration.json();
+      accountIds.push(third.user.id);
 
       const updatedProfileResponse = await request('/api/v1/auth/me', {
         method: 'PATCH',
@@ -148,6 +161,23 @@ test(
       });
       assert.equal(directResponse.status, 201);
       const conversationId = (await directResponse.json()).conversation.id;
+
+      const duplicateDirectResponse = await request('/api/v1/conversations/direct', {
+        method: 'POST',
+        token: second.accessToken,
+        body: { userId: first.user.id },
+      });
+      assert.equal(duplicateDirectResponse.status, 200);
+      assert.equal(
+        (await duplicateDirectResponse.json()).conversation.id,
+        conversationId,
+      );
+
+      const outsiderResponse = await request(
+        '/api/v1/conversations/' + conversationId + '/messages',
+        { token: third.accessToken },
+      );
+      assert.equal(outsiderResponse.status, 404);
 
       const messageResponse = await request(
         '/api/v1/conversations/' + conversationId + '/messages',
