@@ -74,7 +74,7 @@ class RemoteUsersRepository implements UsersRepository {
     required PublicUser user,
     required bool blocked,
   }) async {
-    final path = '/users/' + user.id + '/block';
+    final path = '/users/${user.id}/block';
     if (blocked) {
       await _apiClient.post(path, token: accessToken);
     } else {
@@ -107,7 +107,7 @@ class RemoteUsersRepository implements UsersRepository {
     required PublicUser user,
     required bool following,
   }) async {
-    final path = '/users/' + user.id + '/follow';
+    final path = '/users/${user.id}/follow';
     if (following) {
       await _apiClient.post(path, token: accessToken);
     } else {
