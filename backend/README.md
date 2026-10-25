@@ -32,7 +32,11 @@ For an Android emulator, Flutter's default API URL is `http://10.0.2.2:4000/api/
 - POST / DELETE `/api/v1/users/:userId/follow` — follow or unfollow an account.
 - GET `/api/v1/users/blocked` — list accounts blocked by the current user.
 - POST / DELETE `/api/v1/users/:userId/block` — block or unblock a user.
-- POST `/api/v1/reports` — file a deduplicated report on a user, post, comment, or message.
+- GET `/api/v1/reels?category=gaming&limit=20` — list reels, ordering saved-interest categories first and issuing temporary private video URLs when storage is configured.
+- POST `/api/v1/reels/upload-url` — request a short-lived signed MP4 upload URL (requires private S3-compatible object storage; limited to 10 requests/hour per process).
+- POST `/api/v1/reels` — verify an uploaded object and publish its category/caption metadata.
+- DELETE `/api/v1/reels/:reelId` — remove a reel owned by the current account.
+- POST `/api/v1/reports` — file a deduplicated report on a user, post, comment, message, or reel.
 - POST `/api/v1/conversations/direct` — create or reuse a one-to-one conversation.
 - GET `/api/v1/conversations` — list conversations and unread counts.
 - GET / POST `/api/v1/conversations/:conversationId/messages` — read history or send a text message; only members can access it.
@@ -40,7 +44,7 @@ For an Android emulator, Flutter's default API URL is `http://10.0.2.2:4000/api/
 
 Socket.IO uses the same HTTP server. Connect with the access token in the handshake auth object (`token`). After connection, `conversation:join` accepts a conversation ID and acknowledges only current members. `message:new` is emitted to subscribed conversation rooms after an HTTP message has been persisted; `conversation:updated` is emitted to each member's user room. These events do not provide end-to-end encryption and should only be deployed behind HTTPS/WSS.
 
-The Flutter client currently connects to register/login/session restore, profile updates, text posts, likes, comments, user search/follow, and basic one-to-one text messaging. It can create direct conversations, send/read messages, and display unread counts. These paths are implemented in source. Socket.IO now authenticates the same access tokens, checks conversation membership before joining rooms, broadcasts persisted messages, and notifies users to refresh their inbox. End-to-end checks still need to pass in CI and on Android.
+The Flutter client currently connects to register/login/session restore, profile updates, text posts, likes, comments, user search/follow, and basic one-to-one text messaging. It can create direct conversations, send/read messages, and display unread counts. These paths are implemented in source. Socket.IO authenticates the same access tokens, checks conversation membership before joining rooms, broadcasts persisted messages, and notifies users to refresh their inbox. Video upload uses direct-to-bucket signed PUT/GET URLs; configure all `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` variables on the backend host to enable it. See [deployment instructions](../docs/DEPLOYMENT.md). These paths need a successful current CI run and a real upload/playback test against the configured bucket before they are considered verified.
 
 ## Tests and security baseline
 
@@ -50,4 +54,4 @@ A temporary Render Blueprint is available at the repository root for a shared te
 
 ## Not implemented yet
 
-The backend does not yet include a moderator review queue or staff tools, appeal handling, presence/typing/detailed read-receipt Socket.IO events, refresh-token rotation, email verification, password recovery, media uploads/storage, push notifications, voice/video calls, end-to-end encryption, group conversations, message attachments/voice notes, production deployment, or a full security review. These must not be treated as complete.
+The backend does not yet include a moderator review queue or staff tools, appeal handling, presence/typing/detailed read-receipt Socket.IO events, refresh-token rotation, email verification, password recovery, automated video transcoding/thumbnails, push notifications, voice/video calls, end-to-end encryption, group conversations, message attachments/voice notes, production deployment, or a full security review. Do not treat the reel storage integration as production-ready until an actual bucket is configured and upload, playback, expiry, delete and reporting flows are verified.
