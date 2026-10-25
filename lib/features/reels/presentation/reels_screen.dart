@@ -203,7 +203,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
             children: [
               const Expanded(
                 child: Text(
-                  'ريلز فايكو',
+                  'ريلز Vemblix',
                   style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
                 ),
               ),
