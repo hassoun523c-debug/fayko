@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { messageSchema, sendValidationError, uuidSchema } from '../validation.js';
@@ -111,7 +110,7 @@ export function createConversationsRouter({ pool, jwtSecret }) {
       );
     }
 
-    const recipientId = parsed.data;
+    const recipientId = parsed.data.toLowerCase();
     const currentUserId = req.auth.userId;
     if (recipientId === currentUserId) {
       return errorResponse(
