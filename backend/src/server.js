@@ -5,9 +5,11 @@ import { validateRuntimeConfig } from './config.js';
 import { pool } from './db.js';
 import { runMigrations } from './migrations.js';
 import { attachRealtimeGateway } from './realtime.js';
+import { createMediaStorage } from './media_storage.js';
 
 async function start() {
   const { port } = validateRuntimeConfig();
+  const mediaStorage = createMediaStorage();
   await runMigrations(pool);
   await pool.query('SELECT 1');
 
@@ -29,6 +31,7 @@ async function start() {
     pool,
     jwtSecret: process.env.JWT_SECRET,
     io: ioBridge,
+    mediaStorage,
   });
   const host = process.env.HOST ?? '0.0.0.0';
   const httpServer = createServer(app);
