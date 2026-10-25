@@ -62,7 +62,7 @@ export function createApp({ pool, jwtSecret, io = null }) {
 
   app.use(
     '/api/v1/auth',
-    createAuthRouter({ pool, jwtSecret, authRateLimit }),
+    createAuthRouter({ pool, jwtSecret, authRateLimit, io }),
   );
   app.use('/api/v1/posts', createPostsRouter({ pool, jwtSecret }));
   app.use('/api/v1/users', createUsersRouter({ pool, jwtSecret }));
