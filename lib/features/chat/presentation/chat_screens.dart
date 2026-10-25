@@ -4,6 +4,7 @@ import '../../../core/network/api_client.dart';
 import '../../auth/domain/auth_user.dart';
 import '../../users/domain/public_user.dart';
 import '../data/chat_repository.dart';
+import '../data/chat_realtime.dart';
 import '../domain/chat_conversation.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -11,10 +12,12 @@ class ChatListScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.repository,
+    required this.realtime,
   });
 
   final AuthSession session;
   final ChatRepository repository;
+  final ChatRealtime realtime;
 
   @override
   State<ChatListScreen> createState() => ChatListScreenState();
@@ -24,14 +27,24 @@ class ChatListScreenState extends State<ChatListScreen> {
   List<ChatConversation> _conversations = const [];
   bool _loading = true;
   String? _error;
+  void Function()? _unsubscribeInbox;
 
   @override
   void initState() {
     super.initState();
+    _unsubscribeInbox = widget.realtime.listenForInboxUpdates((_) {
+      if (mounted) _loadConversations();
+    });
     _loadConversations();
   }
 
   Future<void> refresh() => _loadConversations();
+
+  @override
+  void dispose() {
+    _unsubscribeInbox?.call();
+    super.dispose();
+  }
 
   Future<void> _loadConversations() async {
     if (!mounted) return;
@@ -71,6 +84,7 @@ class ChatListScreenState extends State<ChatListScreen> {
             conversationId: conversation.id,
             participant: conversation.participant,
             repository: widget.repository,
+            realtime: widget.realtime,
           ),
         ),
       ),
@@ -185,12 +199,14 @@ class ChatThreadScreen extends StatefulWidget {
     required this.conversationId,
     required this.participant,
     required this.repository,
+    required this.realtime,
   });
 
   final AuthSession session;
   final String conversationId;
   final PublicUser participant;
   final ChatRepository repository;
+  final ChatRealtime realtime;
 
   @override
   State<ChatThreadScreen> createState() => _ChatThreadScreenState();
@@ -202,17 +218,40 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   bool _loading = true;
   bool _sending = false;
   String? _error;
+  void Function()? _unsubscribeMessages;
 
   @override
   void initState() {
     super.initState();
+    _unsubscribeMessages = widget.realtime.listenForMessages(
+      conversationId: widget.conversationId,
+      onMessage: _handleRealtimeMessage,
+    );
     _loadMessages();
   }
 
   @override
   void dispose() {
+    _unsubscribeMessages?.call();
     _controller.dispose();
     super.dispose();
+  }
+
+  void _handleRealtimeMessage(Map<String, dynamic> payload) {
+    try {
+      var message = ChatMessage.fromJson(payload);
+      message = message.copyWith(
+        isMine: message.senderId == widget.session.user.id,
+      );
+      if (!mounted || _messages.any((item) => item.id == message.id)) return;
+      setState(() {
+        _messages = [..._messages, message]
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        _error = null;
+      });
+    } catch (_) {
+      // Ignore malformed events; the HTTP history remains the source of truth.
+    }
   }
 
   Future<void> _loadMessages() async {
