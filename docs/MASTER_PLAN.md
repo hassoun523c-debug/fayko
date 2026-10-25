@@ -40,6 +40,7 @@ Planned feature modules:
 - [x] Add versioned routes for authentication, profile updates, posts, likes, and comments.
 - [x] Add an initial PostgreSQL schema for users, posts, likes, comments, and follows.
 - [x] Add API routes for public profile search, profiles and follow/unfollow.
+- [x] Add direct-conversation/message schema and versioned API endpoints.
 - [ ] Apply the schema to a running PostgreSQL instance and verify it with integration tests.
 - [ ] Define and test a repeatable migration process for future schema changes.
 - [ ] Add refresh-token rotation, server-side session revocation, audit logging, shared rate limiting, backups, and monitoring.
@@ -63,10 +64,12 @@ Planned feature modules:
 - [ ] Add robust cursor pagination in Flutter (API supports cursor paging; client currently loads the first page).
 
 ## 6. Chat and calls
-- [ ] Add message model, delivery states, pagination, and offline queue.
+- [x] Add persisted one-to-one text conversations, message history and basic unread/read markers (end-to-end validation pending).
+- [ ] Add realtime delivery, message delivery states, robust history pagination in Flutter, and offline queue.
 - [ ] Review end-to-end encryption design; use audited protocol libraries.
 - [ ] Define disappearing-message semantics and limitations.
 - [ ] Add file sending and secure signed URLs.
+- [ ] Add message attachments, voice notes, group conversations, push notifications and end-to-end encryption review.
 - [ ] Add voice notes and audio playback controls.
 - [ ] Add WebRTC or managed calling provider, network adaptation, permissions and lifecycle.
 - [ ] Add push notifications that avoid leaking message content.
@@ -92,4 +95,4 @@ Planned feature modules:
 - [ ] iOS signing and TestFlight when an appropriate Apple build environment is available.
 
 ## Current status
-The repository now contains Flutter authentication and text-feed integration code plus an initial Node.js/Express API and PostgreSQL schema. The API/client combination has not yet been run end-to-end against a real database, and CI results are pending. Android platform files have not been generated and validated. No APK is being built in this stage, by design.
+The repository now contains Flutter authentication, text-feed, user-search/follow, and basic direct text-chat code plus a Node.js/Express API and versioned PostgreSQL migrations. The API/client combination has not yet been run end-to-end on Android, and CI results are pending. Android platform files have not been generated and validated. No APK is being built in this stage, by design.
