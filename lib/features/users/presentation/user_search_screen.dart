@@ -349,15 +349,15 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          _DiscoverHint(
+                          const _DiscoverHint(
                             icon: Icons.search_rounded,
                             label: 'ابحث عن حساب',
                           ),
-                          _DiscoverHint(
+                          const _DiscoverHint(
                             icon: Icons.person_add_alt_1_rounded,
                             label: 'تابع الأصدقاء',
                           ),
-                          _DiscoverHint(
+                          const _DiscoverHint(
                             icon: Icons.chat_bubble_outline_rounded,
                             label: 'ابدأ مراسلة',
                           ),
