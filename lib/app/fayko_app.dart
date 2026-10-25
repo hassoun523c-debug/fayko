@@ -43,7 +43,7 @@ class FaykoApp extends StatelessWidget {
     const accent = Color(0xFFE85D75);
 
     return MaterialApp(
-      title: 'فايكو | Fayko',
+      title: 'Vemblix',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       theme: ThemeData(
@@ -362,7 +362,7 @@ class _AuthGateState extends State<AuthGate> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'فايكو',
+          'Vemblix',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
         actions: [
