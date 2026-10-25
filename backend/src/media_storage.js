@@ -13,7 +13,13 @@ export function createMediaStorage(env = process.env) {
   const accessKeyId = (env.R2_ACCESS_KEY_ID ?? env.S3_ACCESS_KEY_ID ?? '').trim();
   const secretAccessKey = (env.R2_SECRET_ACCESS_KEY ?? env.S3_SECRET_ACCESS_KEY ?? '').trim();
 
-  if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) return null;
+  const configuredValues = [endpoint, bucket, accessKeyId, secretAccessKey].filter(Boolean);
+  if (configuredValues.length === 0) return null;
+  if (configuredValues.length !== 4) {
+    throw new Error(
+      'R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY must be configured together.',
+    );
+  }
 
   let parsedEndpoint;
   try {
