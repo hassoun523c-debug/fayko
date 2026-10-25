@@ -43,7 +43,7 @@ async function requireMembership(pool, conversationId, userId) {
   return result.rows.length > 0;
 }
 
-export function createConversationsRouter({ pool, jwtSecret }) {
+export function createConversationsRouter({ pool, jwtSecret, io = null }) {
   const router = express.Router();
   router.use(requireAuth(jwtSecret));
 
@@ -326,22 +326,33 @@ export function createConversationsRouter({ pool, jwtSecret }) {
       [req.auth.userId],
     );
     const sender = senderResult.rows[0];
-
-    return res.status(201).json({
-      message: {
-        id: message.id,
-        body: message.body,
-        createdAt: message.created_at,
-        senderId: message.sender_id,
-        sender: {
-          id: sender.id,
-          username: sender.username,
-          displayName: sender.display_name,
-          avatarUrl: sender.avatar_url,
-        },
-        isMine: true,
+    const messagePayload = {
+      id: message.id,
+      body: message.body,
+      createdAt: message.created_at,
+      senderId: message.sender_id,
+      sender: {
+        id: sender.id,
+        username: sender.username,
+        displayName: sender.display_name,
+        avatarUrl: sender.avatar_url,
       },
-    });
+      isMine: true,
+    };
+
+    // HTTP persists the message first; Socket.IO distributes only committed records.
+    io?.to(conversationId).emit('message:new', messagePayload);
+    const members = await pool.query(
+      'SELECT user_id FROM conversation_members WHERE conversation_id = $1',
+      [conversationId],
+    );
+    for (const member of members.rows) {
+      io?.to('user:' + member.user_id).emit('conversation:updated', {
+        conversationId,
+      });
+    }
+
+    return res.status(201).json({ message: messagePayload });
   });
 
   router.post('/:conversationId/read', async (req, res) => {
