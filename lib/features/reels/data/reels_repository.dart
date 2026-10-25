@@ -101,6 +101,7 @@ class RemoteReelsRepository implements ReelsRepository {
       await request.sink.addStream(video.openRead());
       await request.sink.close();
       final response = await responseFuture.timeout(const Duration(minutes: 5));
+      await response.stream.drain();
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw ApiException(
           statusCode: response.statusCode,
