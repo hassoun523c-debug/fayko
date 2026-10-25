@@ -121,6 +121,111 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     }
   }
 
+  Future<void> _blockUser(PublicUser user) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حظر الحساب'),
+        content: Text(
+          'راح تخفي منشورات @${user.username} وتمنع التواصل معه أثناء الحظر. تگدر تلغي الحظر من إعدادات الحساب.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('حظر'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _busyUsers.add(user.id));
+    try {
+      await widget.repository.setBlocked(
+        accessToken: widget.session.accessToken,
+        user: user,
+        blocked: true,
+      );
+      if (!mounted) return;
+      setState(() => _users.removeWhere((item) => item.id == user.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم حظر @${user.username}.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is ApiException ? error.message : 'تعذر حظر الحساب.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _busyUsers.remove(user.id));
+    }
+  }
+
+  Future<void> _reportUser(PublicUser user) async {
+    const reasons = <String, String>{
+      'spam': 'رسائل مزعجة أو إعلانات',
+      'harassment': 'مضايقة أو تنمّر',
+      'hate_or_discrimination': 'كراهية أو تمييز',
+      'sexual_content': 'محتوى جنسي غير مناسب',
+      'violence': 'عنف أو تهديد',
+      'scam_or_fraud': 'احتيال أو نصب',
+      'impersonation': 'انتحال شخصية',
+      'other': 'سبب آخر',
+    };
+
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text('الإبلاغ عن @${user.username}'),
+        children: [
+          for (final item in reasons.entries)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(dialogContext).pop(item.key),
+              child: Text(item.value),
+            ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('إلغاء'),
+          ),
+        ],
+      ),
+    );
+    if (reason == null || !mounted) return;
+
+    setState(() => _busyUsers.add(user.id));
+    try {
+      await widget.repository.reportUser(
+        accessToken: widget.session.accessToken,
+        user: user,
+        reason: reason,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('وصل البلاغ. راح يخضع للمراجعة عند توفر فريق الإشراف.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is ApiException
+          ? error.message
+          : 'تعذر إرسال البلاغ.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      if (mounted) setState(() => _busyUsers.remove(user.id));
+    }
+  }
+
   Future<void> _toggleFollow(PublicUser user) async {
     if (_busyUsers.contains(user.id)) return;
     final following = !user.isFollowing;
@@ -249,33 +354,67 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                   '@${user.username} · ${user.followersCount} متابع',
                                 ),
                               ),
-                              trailing: SizedBox(
-                                width: 110,
-                                child: user.id == widget.session.user.id
-                                    ? const Text(
-                                        'حسابك',
-                                        textAlign: TextAlign.center,
-                                      )
-                                    : OutlinedButton(
-                                        onPressed: busy
-                                            ? null
-                                            : () => _toggleFollow(user),
-                                        child: busy
-                                            ? const SizedBox(
-                                                width: 18,
-                                                height: 18,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                ),
-                                              )
-                                            : Text(
-                                                user.isFollowing
-                                                    ? 'تتابعه'
-                                                    : 'متابعة',
+                              trailing: user.id == widget.session.user.id
+                                  ? const Text('حسابك')
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        SizedBox(
+                                          width: 96,
+                                          child: OutlinedButton(
+                                            onPressed: busy
+                                                ? null
+                                                : () => _toggleFollow(user),
+                                            child: busy
+                                                ? const SizedBox(
+                                                    width: 18,
+                                                    height: 18,
+                                                    child: CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  )
+                                                : Text(
+                                                    user.isFollowing
+                                                        ? 'تتابعه'
+                                                        : 'متابعة',
+                                                  ),
+                                          ),
+                                        ),
+                                        PopupMenuButton<String>(
+                                          tooltip: 'خيارات الحساب',
+                                          enabled: !busy,
+                                          onSelected: (value) {
+                                            if (value == 'report') {
+                                              _reportUser(user);
+                                            } else if (value == 'block') {
+                                              _blockUser(user);
+                                            }
+                                          },
+                                          itemBuilder: (context) => const [
+                                            PopupMenuItem(
+                                              value: 'report',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.flag_outlined),
+                                                  SizedBox(width: 10),
+                                                  Text('إبلاغ'),
+                                                ],
                                               ),
-                                      ),
-                              ),
+                                            ),
+                                            PopupMenuItem(
+                                              value: 'block',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.block_outlined),
+                                                  SizedBox(width: 10),
+                                                  Text('حظر'),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                             );
                           },
                         ),
