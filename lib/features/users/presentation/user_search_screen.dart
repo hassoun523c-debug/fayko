@@ -267,7 +267,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('البحث عن المستخدمين')),
+      appBar: AppBar(title: const Text('اكتشف')),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
