@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../chat/data/chat_repository.dart';
+import '../../chat/presentation/chat_screens.dart';
 import '../../auth/domain/auth_user.dart';
 import '../data/users_repository.dart';
 import '../domain/public_user.dart';
@@ -10,10 +12,12 @@ class UserSearchScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.repository,
+    required this.chatRepository,
   });
 
   final AuthSession session;
   final UsersRepository repository;
+  final ChatRepository chatRepository;
 
   @override
   State<UserSearchScreen> createState() => _UserSearchScreenState();
@@ -74,6 +78,42 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       if (mounted && requestVersion == _requestVersion) {
         setState(() => _loading = false);
       }
+    }
+  }
+
+  Future<void> _openChat(PublicUser user) async {
+    if (user.id == widget.session.user.id) return;
+
+    try {
+      final conversationId = await widget.chatRepository.openDirect(
+        accessToken: widget.session.accessToken,
+        userId: user.id,
+      );
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: ChatThreadScreen(
+              session: widget.session,
+              conversationId: conversationId,
+              participant: user,
+              repository: widget.chatRepository,
+            ),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is ApiException
+                ? error.message
+                : 'تعذر فتح المحادثة. حاول مرة ثانية.',
+          ),
+        ),
+      );
     }
   }
 
@@ -174,6 +214,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                             final user = _users[index];
                             final busy = _busyUsers.contains(user.id);
                             return ListTile(
+                              onTap: user.id == widget.session.user.id
+                                  ? null
+                                  : () => _openChat(user),
                               contentPadding: const EdgeInsets.symmetric(
                                 vertical: 8,
                               ),
