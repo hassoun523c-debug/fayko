@@ -228,36 +228,38 @@ class _ReelsScreenState extends State<ReelsScreen> {
         ),
         SizedBox(
           height: 48,
-          child: ListView(
+          child: SingleChildScrollView(
             key: const ValueKey('reel-category-list'),
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: 6),
-                child: FilterChip(
-                  label: const Text('لك'),
-                  selected: _selectedCategory == null,
-                  onSelected: (_) => _loadReels(updateCategory: true),
-                ),
-              ),
-              for (final category in _categories)
+            child: Row(
+              children: [
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 6),
-                  child: Tooltip(
-                    message: category.description,
-                    child: FilterChip(
-                      key: ValueKey('reel-category-${category.id}'),
-                      label: Text(category.label),
-                      selected: _selectedCategory == category.id,
-                      onSelected: (_) => _loadReels(
-                        category: category.id,
-                        updateCategory: true,
+                  child: FilterChip(
+                    label: const Text('لك'),
+                    selected: _selectedCategory == null,
+                    onSelected: (_) => _loadReels(updateCategory: true),
+                  ),
+                ),
+                for (final category in _categories)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 6),
+                    child: Tooltip(
+                      message: category.description,
+                      child: FilterChip(
+                        key: ValueKey('reel-category-${category.id}'),
+                        label: Text(category.label),
+                        selected: _selectedCategory == category.id,
+                        onSelected: (_) => _loadReels(
+                          category: category.id,
+                          updateCategory: true,
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
         Expanded(
