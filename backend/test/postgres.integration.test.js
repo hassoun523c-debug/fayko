@@ -113,6 +113,13 @@ test(
       assert.ok(first.accessToken);
       assert.equal(first.user.displayName, 'حساب اختبار');
 
+      const initialFeedResponse = await request('/api/v1/posts?limit=20', {
+        token: first.accessToken,
+      });
+      assert.equal(initialFeedResponse.status, 200);
+      const initialFeed = await initialFeedResponse.json();
+      assert.ok(initialFeed.posts.some((post) => post.author.username === 'fayko_official'));
+
       const secondRegistration = await request('/api/v1/auth/register', {
         method: 'POST',
         body: {
