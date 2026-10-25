@@ -143,5 +143,6 @@ test('user cannot follow their own account', async (t) => {
 
   assert.equal(response.status, 400);
   assert.equal((await response.json()).error.code, 'cannot_follow_self');
-  assert.equal(pool.queries.length, 0);
+  assert.equal(pool.queries.length, 1);
+  assert.match(pool.queries[0].sql, /FROM user_sessions/);
 });
