@@ -57,6 +57,10 @@ export const commentSchema = z.object({
   body: z.string().trim().min(1).max(1000),
 });
 
+export const messageSchema = z.object({
+  body: z.string().trim().min(1).max(4000),
+});
+
 export const uuidSchema = z.string().uuid();
 
 export function sendValidationError(res, error) {
