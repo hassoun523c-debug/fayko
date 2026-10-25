@@ -102,7 +102,7 @@ class FeedScreenState extends State<FeedScreen> {
       if (!mounted) return;
       final index = _posts.indexWhere((item) => item.id == post.id);
       if (index < 0) return;
-      final count = (post.likesCount + (liked ? 1 : -1)).clamp(0, 1 << 30);
+      final count = (post.likesCount + (liked ? 1 : -1)).clamp(0, 1 << 30).toInt();
       setState(() {
         _posts[index] = post.copyWith(
           likedByMe: liked,
