@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
+import { once } from 'node:events';
 import test from 'node:test';
 import pg from 'pg';
 import { createApp } from '../src/app.js';
@@ -15,39 +15,37 @@ test(
   { skip: !databaseUrl },
   async () => {
     const pool = new Pool({ connectionString: databaseUrl });
-    await runMigrations(pool);
-
-    const app = createApp({ pool, jwtSecret });
-    const server = app.listen(0, '127.0.0.1');
-    await once(server, 'listening');
-
-    const baseUrl = 'http://127.0.0.1:' + server.address().port;
     const accountIds = [];
-
-    async function request(path, {
-      method = 'GET',
-      token,
-      body,
-    } = {}) {
-      const headers = { accept: 'application/json' };
-      if (token) headers.authorization = 'Bearer ' + token;
-      if (body !== undefined) headers['content-type'] = 'application/json';
-
-      return fetch(baseUrl + path, {
-        method,
-        headers,
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      });
-    }
+    let server;
 
     try {
+      await runMigrations(pool);
+      const app = createApp({ pool, jwtSecret });
+      server = app.listen(0, '127.0.0.1');
+      await once(server, 'listening');
+
+      const baseUrl = 'http://127.0.0.1:' + server.address().port;
+
+      async function request(path, { method = 'GET', token, body } = {}) {
+        const headers = { accept: 'application/json' };
+        if (token) headers.authorization = 'Bearer ' + token;
+        if (body !== undefined) headers['content-type'] = 'application/json';
+
+        return fetch(baseUrl + path, {
+          method,
+          headers,
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        });
+      }
+
       const suffix = randomUUID().replaceAll('-', '').slice(0, 12);
+      const password = 'integration-test-password-2026';
       const firstRegistration = await request('/api/v1/auth/register', {
         method: 'POST',
         body: {
           username: 'it_' + suffix,
           email: 'first_' + suffix + '@example.test',
-          password: 'integration-test-password-2026',
+          password,
           displayName: 'حساب اختبار',
         },
       });
@@ -62,7 +60,7 @@ test(
         body: {
           username: 'it2_' + suffix,
           email: 'second_' + suffix + '@example.test',
-          password: 'integration-test-password-2026',
+          password,
           displayName: 'حساب ثان',
         },
       });
@@ -75,7 +73,7 @@ test(
         body: {
           username: 'it3_' + suffix,
           email: 'third_' + suffix + '@example.test',
-          password: 'integration-test-password-2026',
+          password,
           displayName: 'حساب ثالث',
         },
       });
@@ -137,6 +135,8 @@ test(
         { token: first.accessToken },
       );
       assert.equal(searchResponse.status, 200);
+      const search = await searchResponse.json();
+      assert.ok(search.users.some((user) => user.username === 'it2_' + suffix));
 
       const followResponse = await request(
         '/api/v1/users/' + second.user.id + '/follow',
@@ -203,7 +203,10 @@ test(
       );
       assert.ok(conversation);
       assert.equal(conversation.unreadCount, 1);
-      assert.equal(conversation.lastMessage.body, 'رسالة مباشرة محفوظة في قاعدة البيانات');
+      assert.equal(
+        conversation.lastMessage.body,
+        'رسالة مباشرة محفوظة في قاعدة البيانات',
+      );
 
       const messagesResponse = await request(
         '/api/v1/conversations/' + conversationId + '/messages',
@@ -224,15 +227,20 @@ test(
         0,
       );
     } finally {
-      if (accountIds.length > 0) {
-        await pool.query(
-          'DELETE FROM users WHERE id = ANY($1::uuid[])',
-          [accountIds],
-        );
+      try {
+        if (accountIds.length > 0) {
+          await pool.query(
+            'DELETE FROM users WHERE id = ANY($1::uuid[])',
+            [accountIds],
+          );
+        }
+      } finally {
+        if (server) {
+          server.closeAllConnections();
+          await new Promise((resolve) => server.close(resolve));
+        }
+        await pool.end();
       }
-      server.closeAllConnections();
-      await new Promise((resolve) => server.close(resolve));
-      await pool.end();
     }
   },
 );
