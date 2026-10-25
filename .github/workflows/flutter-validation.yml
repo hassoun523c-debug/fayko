@@ -9,6 +9,7 @@ on:
       - "test/**"
       - "pubspec.yaml"
       - "analysis_options.yaml"
+      - "android/**"
       - ".github/workflows/flutter-validation.yml"
 
 permissions:
@@ -34,6 +35,24 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Validate Android manifest and network permission
+        run: |
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          root = ET.parse(manifest_path).getroot()
+          android_name = "{http://schemas.android.com/apk/res/android}name"
+          permissions = {
+              element.attrib.get(android_name)
+              for element in root.findall("uses-permission")
+          }
+          assert "android.permission.INTERNET" in permissions, (
+              "Android release manifest must declare INTERNET permission."
+          )
+          print("Android manifest XML valid; INTERNET permission is present.")
+          PY
 
       - name: Format Dart source
         run: dart format lib test
