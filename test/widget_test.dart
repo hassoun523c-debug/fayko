@@ -336,7 +336,7 @@ void main() {
     await tester.tap(find.text('رسائل مزعجة أو إعلانات'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('تم إرسال البلاغ'), findsOneWidget);
+    expect(find.textContaining('تم استلام البلاغ وحفظه'), findsOneWidget);
   });
 
   testWidgets('blocked accounts can be unblocked from the profile', (
