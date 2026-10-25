@@ -3,6 +3,8 @@ import 'package:fayko/features/auth/domain/auth_user.dart';
 import 'package:fayko/features/feed/data/feed_repository.dart';
 import 'package:fayko/features/feed/domain/feed_post.dart';
 import 'package:fayko/features/feed/presentation/feed_screen.dart';
+import 'package:fayko/features/users/data/users_repository.dart';
+import 'package:fayko/features/users/domain/public_user.dart';
 import 'package:fayko/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +17,16 @@ const _user = AuthUser(
   bio: '',
 );
 const _session = AuthSession(user: _user, accessToken: 'test-token');
+const _otherUser = PublicUser(
+  id: 'f7f0d84d-a8f4-4666-8f13-1f1145483b2c',
+  username: 'test_user',
+  displayName: 'مستخدم للاختبار',
+  bio: 'حساب فايكو',
+  postsCount: 2,
+  followersCount: 4,
+  followingCount: 3,
+  isFollowing: false,
+);
 
 class _FakeAuthRepository implements AuthRepository {
   const _FakeAuthRepository({this.restore = true});
@@ -50,6 +62,24 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {}
+}
+
+class _FakeUsersRepository implements UsersRepository {
+  const _FakeUsersRepository();
+
+  @override
+  Future<List<PublicUser>> searchUsers({
+    required String accessToken,
+    required String query,
+  }) async =>
+      [_otherUser];
+
+  @override
+  Future<void> setFollowing({
+    required String accessToken,
+    required PublicUser user,
+    required bool following,
+  }) async {}
 }
 
 class _FakeFeedRepository implements FeedRepository {
@@ -92,6 +122,7 @@ Widget _app({bool authenticated = true}) {
   return FaykoApp(
     authRepository: _FakeAuthRepository(restore: authenticated),
     feedRepository: const _FakeFeedRepository(),
+    usersRepository: const _FakeUsersRepository(),
   );
 }
 
@@ -132,6 +163,28 @@ void main() {
 
     expect(find.text('المحادثات'), findsOneWidget);
     expect(find.textContaining('نظام الرسائل اللحظية'), findsOneWidget);
+  });
+
+  testWidgets('user search displays matching users and follows them', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('البحث عن المستخدمين'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, 'test');
+    await tester.tap(find.byTooltip('بحث'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('مستخدم للاختبار'), findsOneWidget);
+    expect(find.text('متابعة'), findsOneWidget);
+
+    await tester.tap(find.text('متابعة'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('تتابعه'), findsOneWidget);
   });
 
   testWidgets('profile edits are submitted and reflected in the screen', (
