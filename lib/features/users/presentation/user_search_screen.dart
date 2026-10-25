@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../chat/data/chat_repository.dart';
+import '../../chat/data/chat_realtime.dart';
 import '../../chat/presentation/chat_screens.dart';
 import '../../auth/domain/auth_user.dart';
 import '../data/users_repository.dart';
@@ -13,11 +14,13 @@ class UserSearchScreen extends StatefulWidget {
     required this.session,
     required this.repository,
     required this.chatRepository,
+    required this.realtime,
   });
 
   final AuthSession session;
   final UsersRepository repository;
   final ChatRepository chatRepository;
+  final ChatRealtime realtime;
 
   @override
   State<UserSearchScreen> createState() => _UserSearchScreenState();
@@ -99,6 +102,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               conversationId: conversationId,
               participant: user,
               repository: widget.chatRepository,
+              realtime: widget.realtime,
             ),
           ),
         ),
