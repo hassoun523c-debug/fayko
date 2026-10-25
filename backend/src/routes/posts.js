@@ -47,7 +47,7 @@ function respondNotFound(res, resource = 'post') {
 
 export function createPostsRouter({ pool, jwtSecret }) {
   const router = express.Router();
-  router.use(requireAuth(jwtSecret));
+  router.use(requireAuth(jwtSecret, pool));
 
   router.get('/', async (req, res) => {
     const rawLimit = req.query.limit ?? '20';
