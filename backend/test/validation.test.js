@@ -8,6 +8,7 @@ import {
   profileUpdateSchema,
   registerSchema,
   reportSchema,
+  interestsSchema,
 } from '../src/validation.js';
 
 test('registration trims and normalizes account identifiers', () => {
@@ -95,4 +96,15 @@ test('content reports require supported target and reason values', () => {
     }).success,
     false,
   );
+});
+
+test('interest preferences accept supported unique categories only', () => {
+  assert.deepEqual(interestsSchema.parse(['sports', 'gaming', 'global_trends']), [
+    'sports',
+    'gaming',
+    'global_trends',
+  ]);
+  assert.equal(interestsSchema.safeParse(['sports', 'sports']).success, false);
+  assert.equal(interestsSchema.safeParse(['unknown_category']).success, false);
+  assert.equal(interestsSchema.safeParse(Array(16).fill('sports')).success, false);
 });
