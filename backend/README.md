@@ -27,9 +27,13 @@ The database schema is initialized automatically on the first creation of the Po
 - GET /api/v1/posts/:postId/comments — read up to the latest 100 comments.
 - POST /api/v1/posts/:postId/comments — add a comment.
 - DELETE /api/v1/posts/:postId — delete a post owned by the current user.
+- GET /api/v1/users/search?q=term&limit=20 — search public profiles.
+- GET /api/v1/users/:userId — read a public profile and its counters.
+- POST /api/v1/users/:userId/follow — follow an account.
+- DELETE /api/v1/users/:userId/follow — unfollow an account.
 
-All authenticated routes require an Authorization header in the form Bearer access-token. Request bodies are validated and bounded; passwords are hashed with bcrypt; SQL access uses parameterized queries. Registration and login share an in-memory rate limit, which must be replaced by a shared store before running multiple API replicas.
+Node's built-in test runner includes validation, password/token, and HTTP route tests using a mocked database pool; these tests do not replace testing against a real PostgreSQL instance. All authenticated routes require an Authorization header in the form Bearer access-token. Request bodies are validated and bounded; passwords are hashed with bcrypt; SQL access uses parameterized queries. Registration and login share an in-memory rate limit, which must be replaced by a shared store before running multiple API replicas.
 
 ## Not implemented yet
 
-The Flutter client has not been wired to these endpoints. This backend does not yet include refresh-token rotation or server-side session revocation, email verification, password recovery, user search/follow endpoints, image/video uploads, push notifications, realtime messaging, voice/video calls, end-to-end encryption, moderation tooling, production deployment, or a full security review. These must not be treated as complete.
+The Flutter client has not been wired to these endpoints. This backend does not yet include refresh-token rotation or server-side session revocation, email verification, password recovery, image/video uploads, push notifications, realtime messaging, voice/video calls, end-to-end encryption, moderation tooling, production deployment, or a full security review. These must not be treated as complete.
