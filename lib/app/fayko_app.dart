@@ -111,6 +111,7 @@ class AuthGate extends StatefulWidget {
     this.usersRepository,
     this.chatRepository,
     this.chatRealtime,
+    this.reelsRepository,
   });
 
   final AuthRepository? authRepository;
@@ -118,6 +119,7 @@ class AuthGate extends StatefulWidget {
   final UsersRepository? usersRepository;
   final ChatRepository? chatRepository;
   final ChatRealtime? chatRealtime;
+  final ReelsRepository? reelsRepository;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
