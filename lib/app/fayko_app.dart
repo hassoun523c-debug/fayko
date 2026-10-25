@@ -365,27 +365,20 @@ class _AuthGateState extends State<AuthGate> {
           'Vemblix',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
-        actions: [
-          IconButton(
-            tooltip: 'البحث عن المستخدمين',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: UserSearchScreen(
-                      session: session,
-                      repository: _usersRepository,
-                      chatRepository: _chatRepository,
-                      realtime: _chatRealtime,
-                    ),
-                  ),
+        actions: const [
+          Padding(
+            padding: EdgeInsetsDirectional.only(end: 16),
+            child: Center(
+              child: Text(
+                'V',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFE85D75),
                 ),
-              );
-            },
-            icon: const Icon(Icons.search),
+              ),
+            ),
           ),
-          const SizedBox(width: 4),
         ],
       ),
       body: IndexedStack(
@@ -395,6 +388,13 @@ class _AuthGateState extends State<AuthGate> {
             key: _feedKey,
             session: session,
             repository: _feedRepository,
+          ),
+          UserSearchScreen(
+            key: const ValueKey('discover-screen'),
+            session: session,
+            repository: _usersRepository,
+            chatRepository: _chatRepository,
+            realtime: _chatRealtime,
           ),
           ReelsScreen(
             user: session.user,
@@ -428,7 +428,7 @@ class _AuthGateState extends State<AuthGate> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() => _selectedIndex = index);
-          if (index == 2) _chatKey.currentState?.refresh();
+          if (index == 3) _chatKey.currentState?.refresh();
         },
         destinations: const [
           NavigationDestination(
@@ -437,14 +437,19 @@ class _AuthGateState extends State<AuthGate> {
             label: 'الرئيسية',
           ),
           NavigationDestination(
+            icon: Icon(Icons.explore_outlined),
+            selectedIcon: Icon(Icons.explore),
+            label: 'اكتشف',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.play_circle_outline),
             selectedIcon: Icon(Icons.play_circle),
             label: 'ريلز',
           ),
           NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
-            label: 'الدردشة',
+            icon: Icon(Icons.message_outlined),
+            selectedIcon: Icon(Icons.message),
+            label: 'المراسلات',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
