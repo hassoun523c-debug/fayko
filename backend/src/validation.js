@@ -75,3 +75,21 @@ export function sendValidationError(res, error) {
     },
   });
 }
+
+export const reportSchema = z
+  .object({
+    targetType: z.enum(['user', 'post', 'comment', 'message']),
+    targetId: z.string().uuid(),
+    reason: z.enum([
+      'spam',
+      'harassment',
+      'hate_or_discrimination',
+      'sexual_content',
+      'violence',
+      'scam_or_fraud',
+      'impersonation',
+      'other',
+    ]),
+    details: z.string().trim().max(1000).optional().transform((value) => value ?? ''),
+  })
+  .strict();
