@@ -16,6 +16,10 @@ function makePool() {
     async query(sql, values = []) {
       queries.push({ sql, values });
 
+      if (sql.includes('FROM user_sessions WHERE id = $1')) {
+        return { rows: [{ id: values[0] }], rowCount: 1 };
+      }
+
       if (sql.includes('INSERT INTO posts (author_id, body)')) {
         return {
           rows: [{
