@@ -35,7 +35,7 @@ test('registration rejects short passwords and non-ASCII passwords over bcrypt l
     registerSchema.safeParse({
       username: 'valid_user',
       email: 'user@example.com',
-      password: 'ع'.repeat(30),
+      password: 'ع'.repeat(40),
     }).success,
     false,
   );
