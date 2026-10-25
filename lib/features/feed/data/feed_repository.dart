@@ -76,10 +76,10 @@ class RemoteFeedRepository implements FeedRepository {
     required bool liked,
   }) async {
     if (liked) {
-      await _apiClient.post('/posts/' + post.id + '/like', token: accessToken);
+      await _apiClient.post('/posts/${post.id}/like', token: accessToken);
     } else {
       await _apiClient.delete(
-        '/posts/' + post.id + '/like',
+        '/posts/${post.id}/like',
         token: accessToken,
       );
     }
@@ -91,7 +91,7 @@ class RemoteFeedRepository implements FeedRepository {
     required String postId,
   }) async {
     final payload = await _apiClient.get(
-      '/posts/' + postId + '/comments',
+      '/posts/$postId/comments',
       token: accessToken,
     );
     final rawComments = payload['comments'];
@@ -111,7 +111,7 @@ class RemoteFeedRepository implements FeedRepository {
     required String body,
   }) async {
     final payload = await _apiClient.post(
-      '/posts/' + postId + '/comments',
+      '/posts/$postId/comments',
       token: accessToken,
       body: {'body': body},
     );
