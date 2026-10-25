@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: fayko-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: npm install --omit=dev --no-audit --no-fund
+    startCommand: npm start
+    healthCheckPath: /readyz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fayko-db
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: ""
+databases:
+  - name: fayko-db
+    databaseName: fayko
+    user: fayko
+    plan: free
+    region: frankfurt
