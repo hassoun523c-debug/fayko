@@ -70,12 +70,13 @@ class SocketChatRealtimeClient implements ChatRealtime {
       onMessage(message);
     }
 
-    socket.on('connect', (_) => joinConversation());
+    void handleConnect(dynamic _) => joinConversation();
+    socket.on('connect', handleConnect);
     socket.on('message:new', handleMessage);
     if (socket.connected) joinConversation();
 
     return () {
-      socket.off('connect', joinConversation);
+      socket.off('connect', handleConnect);
       socket.off('message:new', handleMessage);
       if (socket.connected) {
         socket.emit('conversation:leave', {
