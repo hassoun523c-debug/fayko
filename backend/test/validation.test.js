@@ -7,6 +7,7 @@ import {
   postSchema,
   profileUpdateSchema,
   registerSchema,
+  reportSchema,
 } from '../src/validation.js';
 
 test('registration trims and normalizes account identifiers', () => {
@@ -66,4 +67,32 @@ test('post and comment bodies are trimmed and bounded', () => {
   assert.equal(messageSchema.parse({ body: '  رسالة  ' }).body, 'رسالة');
   assert.equal(messageSchema.safeParse({ body: '   ' }).success, false);
   assert.equal(messageSchema.safeParse({ body: 'x'.repeat(4001) }).success, false);
+});
+
+test('content reports require supported target and reason values', () => {
+  const valid = reportSchema.parse({
+    targetType: 'post',
+    targetId: '18347b23-45c6-4c5f-8d6c-1e010f001c6a',
+    reason: 'spam',
+    details: '  إعلان مزعج  ',
+  });
+  assert.equal(valid.details, 'إعلان مزعج');
+  assert.equal(
+    reportSchema.safeParse({
+      targetType: 'invalid',
+      targetId: 'not-a-uuid',
+      reason: 'bad-reason',
+      extra: true,
+    }).success,
+    false,
+  );
+  assert.equal(
+    reportSchema.safeParse({
+      targetType: 'post',
+      targetId: '18347b23-45c6-4c5f-8d6c-1e010f001c6a',
+      reason: 'spam',
+      details: 'x'.repeat(1001),
+    }).success,
+    false,
+  );
 });
