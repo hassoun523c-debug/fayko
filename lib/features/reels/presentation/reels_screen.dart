@@ -229,6 +229,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
         SizedBox(
           height: 48,
           child: ListView(
+            key: const ValueKey('reel-category-list'),
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
             children: [
@@ -268,7 +269,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
                       title: 'ما قدرنا نحمل الريلز',
                       description: _error!,
                       actionLabel: 'إعادة المحاولة',
-                      onAction: _loadReels,
+                      onAction: () => unawaited(_loadReels()),
                     )
                   : _reels.isEmpty
                       ? _ReelMessageState(
