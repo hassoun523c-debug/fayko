@@ -3,6 +3,8 @@
 This is the living engineering checklist. Items are not considered complete until implemented and tested.
 
 ## 0. Product decisions and safety foundations
+- [x] Add initial competitor research and strategy document: [COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md).
+- [ ] Validate the first target audience and the single most important problem Fayko should solve.
 - [ ] Confirm minimum supported Android/iOS versions and release targets.
 - [ ] Define community rules, reporting, blocking, and abuse-response flows.
 - [ ] Define data retention, account deletion, export, and privacy policy.
@@ -85,4 +87,4 @@ Each feature should separate data, domain, and presentation layers where complex
 - [ ] iOS signing and TestFlight when an appropriate Apple build environment is available.
 
 ## Current status
-Only the initial source shell and roadmap have been added. This repository is not yet a complete or runnable generated Flutter platform project until Flutter tooling creates the platform folders and the app is built and tested.
+The repository now includes an initial Flutter source shell, a master implementation checklist, and a public-source competitor research document. It is not yet a complete or verified runnable Flutter platform project: Flutter tooling has not generated and validated the platform folders and no full app build/test has been confirmed.
