@@ -61,7 +61,7 @@ export const messageSchema = z.object({
   body: z.string().trim().min(1).max(4000),
 });
 
-export const uuidSchema = z.string().uuid();
+export const uuidSchema = z.string().uuid().transform((value) => value.toLowerCase());
 
 export function sendValidationError(res, error) {
   return res.status(400).json({
