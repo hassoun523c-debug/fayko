@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../core/network/api_client.dart';
 import '../core/storage/token_store.dart';
@@ -79,6 +80,11 @@ class FaykoApp extends StatelessWidget {
       ),
       locale: const Locale('ar'),
       supportedLocales: const [Locale('ar'), Locale('en')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: Directionality(
         textDirection: TextDirection.rtl,
         child: AuthGate(
