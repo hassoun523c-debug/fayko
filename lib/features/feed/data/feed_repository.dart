@@ -7,6 +7,7 @@ abstract interface class FeedRepository {
   Future<FeedPost> createPost({
     required String accessToken,
     required String body,
+    String category = 'general',
   });
 
   Future<void> setLiked({
@@ -54,11 +55,12 @@ class RemoteFeedRepository implements FeedRepository {
   Future<FeedPost> createPost({
     required String accessToken,
     required String body,
+    String category = 'general',
   }) async {
     final payload = await _apiClient.post(
       '/posts',
       token: accessToken,
-      body: {'body': body},
+      body: {'body': body, 'category': category},
     );
     final rawPost = payload['post'];
     if (rawPost is! Map<String, dynamic>) {
