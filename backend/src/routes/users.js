@@ -35,7 +35,7 @@ const profileQuery = [
 
 export function createUsersRouter({ pool, jwtSecret }) {
   const router = express.Router();
-  router.use(requireAuth(jwtSecret));
+  router.use(requireAuth(jwtSecret, pool));
 
   router.get('/search', async (req, res) => {
     const rawQuery = req.query.q;
