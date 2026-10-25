@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import express from 'express';
 import {
   accessTokenLifetimeSeconds,
@@ -29,6 +30,16 @@ function formatUser(row) {
   };
 }
 
+async function issueAccessToken(pool, userId, jwtSecret) {
+  const sessionId = randomUUID();
+  await pool.query(
+    "INSERT INTO user_sessions (id, user_id, expires_at) " +
+      "VALUES ($1, $2, NOW() + INTERVAL '1 hour')",
+    [sessionId, userId],
+  );
+  return signAccessToken(userId, jwtSecret, sessionId);
+}
+
 function sendInvalidCredentials(res) {
   return res.status(401).json({
     error: {
@@ -38,7 +49,7 @@ function sendInvalidCredentials(res) {
   });
 }
 
-export function createAuthRouter({ pool, jwtSecret, authRateLimit }) {
+export function createAuthRouter({ pool, jwtSecret, authRateLimit, io = null }) {
   const router = express.Router();
 
   router.post('/register', authRateLimit, async (req, res) => {
@@ -58,7 +69,7 @@ export function createAuthRouter({ pool, jwtSecret, authRateLimit }) {
         [username, email, displayName ?? username, passwordHash],
       );
       const user = formatUser(result.rows[0]);
-      const accessToken = signAccessToken(user.id, jwtSecret);
+      const accessToken = await issueAccessToken(pool, user.id, jwtSecret);
 
       return res.status(201).json({
         user,
@@ -103,7 +114,7 @@ export function createAuthRouter({ pool, jwtSecret, authRateLimit }) {
     }
 
     const user = formatUser(row);
-    const accessToken = signAccessToken(user.id, jwtSecret);
+    const accessToken = await issueAccessToken(pool, user.id, jwtSecret);
 
     return res.status(200).json({
       user,
@@ -113,7 +124,17 @@ export function createAuthRouter({ pool, jwtSecret, authRateLimit }) {
     });
   });
 
-  router.get('/me', requireAuth(jwtSecret), async (req, res) => {
+  router.post('/logout', requireAuth(jwtSecret, pool), async (req, res) => {
+    await pool.query(
+      'UPDATE user_sessions SET revoked_at = NOW() ' +
+        'WHERE id = $1 AND user_id = $2 AND revoked_at IS NULL',
+      [req.auth.sessionId, req.auth.userId],
+    );
+    io?.in('session:' + req.auth.sessionId).disconnectSockets(true);
+    return res.status(204).send();
+  });
+
+  router.get('/me', requireAuth(jwtSecret, pool), async (req, res) => {
     const result = await pool.query(
       'SELECT ' + publicUserColumns + ' FROM users WHERE id = $1',
       [req.auth.userId],
@@ -131,7 +152,7 @@ export function createAuthRouter({ pool, jwtSecret, authRateLimit }) {
     return res.status(200).json({ user: formatUser(result.rows[0]) });
   });
 
-  router.patch('/me', requireAuth(jwtSecret), async (req, res) => {
+  router.patch('/me', requireAuth(jwtSecret, pool), async (req, res) => {
     const parsed = profileUpdateSchema.safeParse(req.body);
     if (!parsed.success) {
       return sendValidationError(res, parsed.error);
