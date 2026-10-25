@@ -140,6 +140,59 @@ test(
       const profile = (await profileResponse.json()).user;
       assert.equal(profile.isFollowing, true);
       assert.equal(profile.followersCount, 1);
+
+      const directResponse = await request('/api/v1/conversations/direct', {
+        method: 'POST',
+        token: first.accessToken,
+        body: { userId: second.user.id },
+      });
+      assert.equal(directResponse.status, 201);
+      const conversationId = (await directResponse.json()).conversation.id;
+
+      const messageResponse = await request(
+        '/api/v1/conversations/' + conversationId + '/messages',
+        {
+          method: 'POST',
+          token: first.accessToken,
+          body: { body: 'رسالة مباشرة محفوظة في قاعدة البيانات' },
+        },
+      );
+      assert.equal(messageResponse.status, 201);
+      assert.equal(
+        (await messageResponse.json()).message.body,
+        'رسالة مباشرة محفوظة في قاعدة البيانات',
+      );
+
+      const inboxResponse = await request('/api/v1/conversations', {
+        token: second.accessToken,
+      });
+      assert.equal(inboxResponse.status, 200);
+      const inbox = await inboxResponse.json();
+      const conversation = inbox.conversations.find(
+        (item) => item.id === conversationId,
+      );
+      assert.ok(conversation);
+      assert.equal(conversation.unreadCount, 1);
+      assert.equal(conversation.lastMessage.body, 'رسالة مباشرة محفوظة في قاعدة البيانات');
+
+      const messagesResponse = await request(
+        '/api/v1/conversations/' + conversationId + '/messages',
+        { token: second.accessToken },
+      );
+      assert.equal(messagesResponse.status, 200);
+      const messages = await messagesResponse.json();
+      assert.equal(messages.messages.length, 1);
+      assert.equal(messages.messages[0].isMine, false);
+      assert.equal(messages.messages[0].senderId, first.user.id);
+
+      const readInboxResponse = await request('/api/v1/conversations', {
+        token: second.accessToken,
+      });
+      const readInbox = await readInboxResponse.json();
+      assert.equal(
+        readInbox.conversations.find((item) => item.id === conversationId).unreadCount,
+        0,
+      );
     } finally {
       if (accountIds.length > 0) {
         await pool.query(
