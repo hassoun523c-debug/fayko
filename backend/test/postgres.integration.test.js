@@ -364,6 +364,17 @@ test(
         'session_revoked_or_expired',
       );
 
+      const thirdConversationResponse = await request(
+        '/api/v1/conversations/direct',
+        {
+          method: 'POST',
+          token: third.accessToken,
+          body: { userId: second.user.id },
+        },
+      );
+      assert.equal(thirdConversationResponse.status, 201);
+      const thirdConversationId = (await thirdConversationResponse.json()).conversation.id;
+
       const blockResponse = await request(
         '/api/v1/users/' + second.user.id + '/block',
         { method: 'POST', token: third.accessToken },
@@ -372,18 +383,18 @@ test(
       assert.equal((await blockResponse.json()).blocked, true);
 
       const blockedMessageResponse = await request(
-        '/api/v1/conversations/' + conversationId + '/messages',
+        '/api/v1/conversations/' + thirdConversationId + '/messages',
         {
           method: 'POST',
-          token: second.accessToken,
+          token: third.accessToken,
           body: { body: 'يجب رفض هذه الرسالة بعد الحظر' },
         },
       );
       assert.equal(blockedMessageResponse.status, 404);
 
       const blockedSocketJoin = await joinSocketConversation(
-        secondSocket,
-        conversationId,
+        outsiderSocket,
+        thirdConversationId,
       );
       assert.deepEqual(blockedSocketJoin, {
         ok: false,
