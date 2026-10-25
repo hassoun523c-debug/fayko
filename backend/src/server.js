@@ -2,9 +2,11 @@ import 'dotenv/config';
 import { createApp } from './app.js';
 import { validateRuntimeConfig } from './config.js';
 import { pool } from './db.js';
+import { runMigrations } from './migrations.js';
 
 async function start() {
   const { port } = validateRuntimeConfig();
+  await runMigrations(pool);
   await pool.query('SELECT 1');
 
   const app = createApp({
