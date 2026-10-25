@@ -7,16 +7,21 @@ import '../features/auth/domain/auth_user.dart';
 import '../features/auth/presentation/auth_screen.dart';
 import '../features/feed/data/feed_repository.dart';
 import '../features/feed/presentation/feed_screen.dart';
+import '../features/profile/presentation/edit_profile_dialog.dart';
+import '../features/users/data/users_repository.dart';
+import '../features/users/presentation/user_search_screen.dart';
 
 class FaykoApp extends StatelessWidget {
   const FaykoApp({
     super.key,
     this.authRepository,
     this.feedRepository,
+    this.usersRepository,
   });
 
   final AuthRepository? authRepository;
   final FeedRepository? feedRepository;
+  final UsersRepository? usersRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +75,7 @@ class FaykoApp extends StatelessWidget {
         child: AuthGate(
           authRepository: authRepository,
           feedRepository: feedRepository,
+          usersRepository: usersRepository,
         ),
       ),
     );
@@ -81,10 +87,12 @@ class AuthGate extends StatefulWidget {
     super.key,
     this.authRepository,
     this.feedRepository,
+    this.usersRepository,
   });
 
   final AuthRepository? authRepository;
   final FeedRepository? feedRepository;
+  final UsersRepository? usersRepository;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -94,6 +102,7 @@ class _AuthGateState extends State<AuthGate> {
   late final ApiClient _apiClient;
   late final AuthRepository _authRepository;
   late final FeedRepository _feedRepository;
+  late final UsersRepository _usersRepository;
   final GlobalKey<FeedScreenState> _feedKey = GlobalKey<FeedScreenState>();
 
   AuthSession? _session;
@@ -114,6 +123,8 @@ class _AuthGateState extends State<AuthGate> {
         );
     _feedRepository = widget.feedRepository ??
         RemoteFeedRepository(apiClient: _apiClient);
+    _usersRepository = widget.usersRepository ??
+        RemoteUsersRepository(apiClient: _apiClient);
     _restoreSession();
   }
 
@@ -225,6 +236,28 @@ class _AuthGateState extends State<AuthGate> {
     }
   }
 
+  Future<void> _updateProfile(String displayName, String bio) async {
+    final currentSession = _session;
+    if (currentSession == null) return;
+
+    final updatedUser = await _authRepository.updateProfile(
+      accessToken: currentSession.accessToken,
+      displayName: displayName,
+      bio: bio,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _session = AuthSession(
+        user: updatedUser,
+        accessToken: currentSession.accessToken,
+      );
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('تم حفظ الملف الشخصي.')),
+    );
+  }
+
   String _friendlyError(Object error, String fallback) {
     if (error is ApiException) return error.message;
     if (error is FormatException) {
@@ -257,6 +290,26 @@ class _AuthGateState extends State<AuthGate> {
           'فايكو',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'البحث عن المستخدمين',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: UserSearchScreen(
+                      session: session,
+                      repository: _usersRepository,
+                    ),
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.search),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -276,7 +329,11 @@ class _AuthGateState extends State<AuthGate> {
             title: 'المحادثات',
             description: 'نظام الرسائل اللحظية والتسليم والإشعارات لم يكتمل بعد.',
           ),
-          _ProfileScreen(user: session.user, onLogout: _logout),
+          _ProfileScreen(
+            user: session.user,
+            onLogout: _logout,
+            onUpdateProfile: _updateProfile,
+          ),
         ],
       ),
       floatingActionButton: _selectedIndex == 0
@@ -322,10 +379,12 @@ class _ProfileScreen extends StatelessWidget {
   const _ProfileScreen({
     required this.user,
     required this.onLogout,
+    required this.onUpdateProfile,
   });
 
   final AuthUser user;
   final VoidCallback onLogout;
+  final Future<void> Function(String displayName, String bio) onUpdateProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -359,7 +418,17 @@ class _ProfileScreen extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(color: colors.onSurfaceVariant),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 18),
+        OutlinedButton.icon(
+          onPressed: () => showEditProfileDialog(
+            context: context,
+            user: user,
+            onSave: onUpdateProfile,
+          ),
+          icon: const Icon(Icons.edit_outlined),
+          label: const Text('تعديل الملف الشخصي'),
+        ),
+        const SizedBox(height: 10),
         Card(
           child: Column(
             children: [
