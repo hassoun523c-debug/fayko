@@ -1,6 +1,6 @@
 # Fayko API
 
-This directory contains the first backend implementation for Fayko: a Node.js/Express HTTP API with PostgreSQL persistence. Flutter client code now calls the authentication and text-feed endpoints, but the end-to-end setup has not yet been verified against a running database and Android build.
+This directory contains Fayko's first backend implementation: a Node.js/Express HTTP API with PostgreSQL persistence. The GitHub Actions integration suite has passed against PostgreSQL and Socket.IO, including social flows and reel-storage API tests. A public deployment and a real two-phone end-to-end test have not yet been completed.
 
 ## Local setup
 
