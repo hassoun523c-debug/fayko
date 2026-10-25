@@ -247,7 +247,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
                   child: Tooltip(
                     message: category.description,
                     child: FilterChip(
-                      key: ValueKey('reel-category-' + category.id),
+                      key: ValueKey('reel-category-${category.id}'),
                       label: Text(category.label),
                       selected: _selectedCategory == category.id,
                       onSelected: (_) => _loadReels(
@@ -485,7 +485,7 @@ class _ReelVideoPageState extends State<_ReelVideoPage> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            '@' + reel.author.username,
+                            '@${reel.author.username}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -609,7 +609,7 @@ class _InterestChooserSheetState extends State<_InterestChooserSheet> {
                 children: [
                   for (final category in widget.categories)
                     FilterChip(
-                      key: ValueKey('edit-interest-' + category.id),
+                      key: ValueKey('edit-interest-${category.id}'),
                       avatar: Icon(category.icon, size: 17),
                       label: Text(category.label),
                       selected: _selection.contains(category.id),
