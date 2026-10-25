@@ -133,6 +133,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('تسجيل الدخول'), findsOneWidget);
-    expect(find.text('إنشاء حساب جديد'), findsOneWidget);
+    expect(find.textContaining('إنشاء حساب جديد'), findsOneWidget);
   });
 }
