@@ -117,6 +117,16 @@ test('private feed rejects requests without a bearer token', async (t) => {
   assert.equal(pool.queries.length, 0);
 });
 
+test('reel feed explicitly reports when video storage is not configured', async (t) => {
+  const { baseUrl, token } = await startTestServer(t);
+  const response = await fetch(baseUrl + '/api/v1/reels', {
+    headers: { authorization: 'Bearer ' + token },
+  });
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { reels: [], uploadEnabled: false });
+});
+
 test('authenticated user can create a text post through the HTTP API', async (t) => {
   const { baseUrl, token } = await startTestServer(t);
   const response = await fetch(baseUrl + '/api/v1/posts', {
