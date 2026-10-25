@@ -17,10 +17,10 @@ class ChatListScreen extends StatefulWidget {
   final ChatRepository repository;
 
   @override
-  State<ChatListScreen> createState() => _ChatListScreenState();
+  State<ChatListScreen> createState() => ChatListScreenState();
 }
 
-class _ChatListScreenState extends State<ChatListScreen> {
+class ChatListScreenState extends State<ChatListScreen> {
   List<ChatConversation> _conversations = const [];
   bool _loading = true;
   String? _error;
@@ -30,6 +30,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
     super.initState();
     _loadConversations();
   }
+
+  Future<void> refresh() => _loadConversations();
 
   Future<void> _loadConversations() async {
     if (!mounted) return;
@@ -73,7 +75,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ),
       ),
     );
-    if (mounted) _loadConversations();
+    if (mounted) await _loadConversations();
   }
 
   @override
