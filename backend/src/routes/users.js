@@ -84,6 +84,20 @@ export function createUsersRouter({ pool, jwtSecret, io = null }) {
     });
   });
 
+  router.get('/blocked', async (req, res) => {
+    const result = await pool.query(
+      'SELECT u.id, u.username, u.display_name, u.bio, u.avatar_url, u.created_at, ' +
+        '(SELECT COUNT(*)::int FROM posts p WHERE p.author_id = u.id) AS posts_count, ' +
+        '(SELECT COUNT(*)::int FROM follows f WHERE f.following_id = u.id) AS followers_count, ' +
+        '(SELECT COUNT(*)::int FROM follows f WHERE f.follower_id = u.id) AS following_count, ' +
+        'EXISTS (SELECT 1 FROM follows f WHERE f.follower_id = $1 AND f.following_id = u.id) AS is_following ' +
+        'FROM user_blocks b JOIN users u ON u.id = b.blocked_id ' +
+        'WHERE b.blocker_id = $1 ORDER BY b.created_at DESC LIMIT 200',
+      [req.auth.userId],
+    );
+    return res.status(200).json({ users: result.rows.map(publicProfile) });
+  });
+
   router.get('/:userId', async (req, res) => {
     const parsedId = uuidSchema.safeParse(req.params.userId);
     if (!parsedId.success) return invalidUserId(res);
