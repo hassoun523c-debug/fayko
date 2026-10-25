@@ -25,6 +25,16 @@ export async function getAccessibleTarget(pool, targetType, targetId, reporterId
     return { accessible: !blocked };
   }
 
+  if (targetType === 'reel') {
+    const result = await pool.query(
+      'SELECT id, author_id FROM reels WHERE id = $1',
+      [targetId],
+    );
+    if (!result.rows[0]) return { accessible: false };
+    const blocked = await isBlockedBetween(pool, reporterId, result.rows[0].author_id);
+    return { accessible: !blocked };
+  }
+
   if (targetType === 'comment') {
     const result = await pool.query(
       'SELECT c.id, c.author_id FROM comments c WHERE c.id = $1',
