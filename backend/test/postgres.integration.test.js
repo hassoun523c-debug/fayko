@@ -142,10 +142,16 @@ test(
       const updatedProfileResponse = await request('/api/v1/auth/me', {
         method: 'PATCH',
         token: first.accessToken,
-        body: { displayName: 'فايكو محدث', bio: 'نبذة اختبار' },
+        body: {
+          displayName: 'فايكو محدث',
+          bio: 'نبذة اختبار',
+          interests: ['sports', 'gaming', 'global_trends'],
+        },
       });
       assert.equal(updatedProfileResponse.status, 200);
-      assert.equal((await updatedProfileResponse.json()).user.bio, 'نبذة اختبار');
+      const updatedProfile = (await updatedProfileResponse.json()).user;
+      assert.equal(updatedProfile.bio, 'نبذة اختبار');
+      assert.deepEqual(updatedProfile.interests, ['sports', 'gaming', 'global_trends']);
 
       const createPostResponse = await request('/api/v1/posts', {
         method: 'POST',
