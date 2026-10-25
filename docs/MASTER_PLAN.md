@@ -44,7 +44,7 @@ Planned feature modules:
 - [ ] Define and test a repeatable migration process for future schema changes.
 - [ ] Add refresh-token rotation, server-side session revocation, audit logging, shared rate limiting, backups, and monitoring.
 - [ ] Verify Flutter authentication and feed against a running API end-to-end.
-- [ ] Connect Flutter user search and follow/unfollow UI.
+- [x] Add Flutter user-search and follow/unfollow UI (end-to-end verification pending).
 - [ ] Add WebSocket events for presence, typing, delivery, and read receipts.
 
 ## 4. Media and delivery
@@ -77,7 +77,8 @@ Planned feature modules:
 - [ ] Add user-created saved folders.
 
 ## 8. Profile, privacy, and settings
-- [ ] Add editable profile screen and profile photo upload.
+- [x] Add editable display-name and bio fields in the profile screen (end-to-end verification pending).
+- [ ] Add profile photo upload.
 - [ ] Add account privacy controls and block/mute lists.
 - [ ] Add local biometric lock with secure device APIs.
 - [ ] Add session/device management and remote logout.
