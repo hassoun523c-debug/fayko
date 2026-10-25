@@ -18,6 +18,11 @@ async function start() {
         ? realtimeServer.to(room)
         : { emit: () => false };
     },
+    in(room) {
+      return realtimeServer
+        ? realtimeServer.in(room)
+        : { disconnectSockets: () => false };
+    },
   };
 
   const app = createApp({
