@@ -29,12 +29,39 @@ class FeedScreen extends StatefulWidget {
 class FeedScreenState extends State<FeedScreen> {
   List<FeedPost> _posts = const [];
   bool _loading = true;
+  String _selectedFeedCategory = 'all';
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _selectedFeedCategory = widget.session.user.interests.isEmpty ? 'all' : 'forYou';
     _loadFeed();
+  }
+
+  @override
+  void didUpdateWidget(covariant FeedScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final availableInterests = widget.session.user.interests.toSet();
+    if (_selectedFeedCategory != 'all' &&
+        _selectedFeedCategory != 'forYou' &&
+        !availableInterests.contains(_selectedFeedCategory)) {
+      _selectedFeedCategory = 'forYou';
+    }
+  }
+
+  List<FeedPost> get _visiblePosts {
+    if (_selectedFeedCategory == 'all') return _posts;
+    final interests = widget.session.user.interests.toSet();
+    if (_selectedFeedCategory == 'forYou') {
+      if (interests.isEmpty) return _posts;
+      return _posts
+          .where((post) => post.category == 'general' || interests.contains(post.category))
+          .toList(growable: false);
+    }
+    return _posts
+        .where((post) => post.category == _selectedFeedCategory)
+        .toList(growable: false);
   }
 
   Future<void> _loadFeed() async {
@@ -195,6 +222,30 @@ class FeedScreenState extends State<FeedScreen> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              FilterChip(
+                label: const Text('لك'),
+                selected: _selectedFeedCategory == 'forYou',
+                onSelected: (_) => setState(() => _selectedFeedCategory = 'forYou'),
+              ),
+              FilterChip(
+                label: const Text('الكل'),
+                selected: _selectedFeedCategory == 'all',
+                onSelected: (_) => setState(() => _selectedFeedCategory = 'all'),
+              ),
+              for (final category in widget.session.user.interests)
+                FilterChip(
+                  key: ValueKey('feed-filter-$category'),
+                  label: Text(postCategoryLabel(category)),
+                  selected: _selectedFeedCategory == category,
+                  onSelected: (_) => setState(() => _selectedFeedCategory = category),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
           if (_loading && _posts.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 48),
@@ -214,6 +265,12 @@ class FeedScreenState extends State<FeedScreen> {
               title: 'ماكو منشورات لحد الآن',
               description: 'اكتب أول منشور حتى يبدأ محتوى فايكو بالظهور هنا.',
             ),
+          else if (_visiblePosts.isEmpty)
+            const _FeedStatus(
+              icon: Icons.filter_list_off_outlined,
+              title: 'ماكو منشورات بهالتصنيف بعد',
+              description: 'جرّب تصنيفاً آخر أو ارجع إلى «الكل».',
+            ),
           if (_error != null && _posts.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -222,7 +279,7 @@ class FeedScreenState extends State<FeedScreen> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
-          for (final post in _posts) _buildPostCard(post),
+          for (final post in _visiblePosts) _buildPostCard(post),
         ],
       ),
     );
