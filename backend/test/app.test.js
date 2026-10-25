@@ -20,11 +20,12 @@ function makePool() {
         return { rows: [{ id: values[0] }], rowCount: 1 };
       }
 
-      if (sql.includes('INSERT INTO posts (author_id, body)')) {
+      if (sql.includes('INSERT INTO posts (author_id, body, category)')) {
         return {
           rows: [{
             id: postId,
             body: values[1],
+            category: values[2] ?? 'general',
             created_at: new Date('2026-01-01T10:00:00Z'),
             updated_at: new Date('2026-01-01T10:00:00Z'),
           }],
@@ -37,6 +38,7 @@ function makePool() {
           rows: [{
             id: postId,
             body: 'منشور اختبار',
+            category: 'general',
             created_at: new Date('2026-01-01T10:00:00Z'),
             updated_at: new Date('2026-01-01T10:00:00Z'),
             author: {
@@ -130,6 +132,7 @@ test('authenticated user can create a text post through the HTTP API', async (t)
   const payload = await response.json();
   assert.equal(payload.post.id, postId);
   assert.equal(payload.post.body, 'منشور اختبار');
+  assert.equal(payload.post.category, 'general');
   assert.equal(payload.post.author.username, 'fayko_user');
   assert.equal(payload.post.likesCount, 0);
 });
