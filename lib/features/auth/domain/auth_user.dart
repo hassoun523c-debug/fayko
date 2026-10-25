@@ -15,6 +15,22 @@ class AuthUser {
   final String bio;
   final String? avatarUrl;
 
+  AuthUser copyWith({
+    String? displayName,
+    String? bio,
+    String? avatarUrl,
+    bool clearAvatar = false,
+  }) {
+    return AuthUser(
+      id: id,
+      username: username,
+      email: email,
+      displayName: displayName ?? this.displayName,
+      bio: bio ?? this.bio,
+      avatarUrl: clearAvatar ? null : (avatarUrl ?? this.avatarUrl),
+    );
+  }
+
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(
       id: json['id'] as String,
