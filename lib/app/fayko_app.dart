@@ -484,7 +484,7 @@ class _ProfileScreen extends StatelessWidget {
           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
         ),
         Text(
-          '@' + user.username,
+          '@${user.username}',
           textAlign: TextAlign.center,
           style: TextStyle(color: colors.onSurfaceVariant),
         ),
