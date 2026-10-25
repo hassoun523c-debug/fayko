@@ -1,10 +1,10 @@
-# Fayko Master Plan — Implementation Roadmap
+# Vemblix Master Plan — Implementation Roadmap
 
 This is the living engineering checklist. Items are not considered complete until implemented and tested.
 
 ## 0. Product decisions and safety foundations
 - [x] Add initial competitor research and strategy document: [COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md).
-- [ ] Validate the first target audience and the single most important problem Fayko should solve.
+- [ ] Validate the first target audience and the single most important problem Vemblix should solve.
 - [ ] Confirm minimum supported Android version and release target.
 - [x] Add initial block/unblock, report submission and blocked-account listing code (review queue and operational policy still pending).
 - [ ] Define community rules, moderator access controls, appeals, abuse-response SLAs, and privacy processes.
