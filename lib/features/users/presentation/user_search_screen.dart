@@ -210,7 +210,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('تم إرسال البلاغ إلى النظام.'),
+          content: Text('تم استلام البلاغ وحفظه للنظر فيه عند توفر مراجعة.'),
         ),
       );
     } catch (error) {
