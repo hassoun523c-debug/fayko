@@ -122,7 +122,7 @@ export function sendValidationError(res, error) {
 
 export const reportSchema = z
   .object({
-    targetType: z.enum(['user', 'post', 'comment', 'message']),
+    targetType: z.enum(['user', 'post', 'comment', 'message', 'reel']),
     targetId: z.string().uuid(),
     reason: z.enum([
       'spam',
