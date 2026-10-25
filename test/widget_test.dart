@@ -132,6 +132,27 @@ class _FakeUsersRepository implements UsersRepository {
     required PublicUser user,
     required bool following,
   }) async {}
+
+  @override
+  Future<List<PublicUser>> loadBlockedUsers({
+    required String accessToken,
+  }) async =>
+      [_otherUser];
+
+  @override
+  Future<void> setBlocked({
+    required String accessToken,
+    required PublicUser user,
+    required bool blocked,
+  }) async {}
+
+  @override
+  Future<void> reportUser({
+    required String accessToken,
+    required PublicUser user,
+    required String reason,
+    String details = '',
+  }) async {}
 }
 
 class _FakeFeedRepository implements FeedRepository {
@@ -260,6 +281,44 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('تتابعه'), findsOneWidget);
+  });
+
+  testWidgets('user report sends a selected reason', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('البحث عن المستخدمين'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'test');
+    await tester.tap(find.byTooltip('بحث'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('خيارات الحساب'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('إبلاغ'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('رسائل مزعجة أو إعلانات'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('تم إرسال البلاغ'), findsOneWidget);
+  });
+
+  testWidgets('blocked accounts can be unblocked from the profile', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('حسابي'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('الحسابات المحظورة'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('مستخدم للاختبار'), findsOneWidget);
+    await tester.tap(find.text('إلغاء الحظر'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ماكو حسابات محظورة'), findsOneWidget);
   });
 
   testWidgets('profile edits are submitted and reflected in the screen', (
