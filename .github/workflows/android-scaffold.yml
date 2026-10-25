@@ -1,0 +1,55 @@
+name: Prepare Android platform files
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/android-scaffold.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fayko-android-scaffold
+  cancel-in-progress: false
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android platform files if missing
+        run: |
+          if [ -d android ]; then
+            echo "Android platform files already exist; nothing to generate."
+            exit 0
+          fi
+          flutter create --platforms=android --org com.fayko --project-name fayko .
+
+      - name: Commit only generated Android files
+        run: |
+          if [ -d android ] && [ -z "$(git status --porcelain -- android)" ]; then
+            echo "No Android file changes to commit."
+            exit 0
+          fi
+          git add android/
+          if git diff --cached --quiet; then
+            echo "No generated Android files to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Add generated Android platform scaffolding"
+          git push origin HEAD:main
