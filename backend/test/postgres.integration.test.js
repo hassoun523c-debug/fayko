@@ -3,7 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import test from 'node:test';
 import pg from 'pg';
+import { io as createSocketClient } from 'socket.io-client';
 import { createApp } from '../src/app.js';
+import { attachRealtimeGateway } from '../src/realtime.js';
 import { runMigrations } from '../src/migrations.js';
 
 const { Pool } = pg;
@@ -17,14 +19,56 @@ test(
     const pool = new Pool({ connectionString: databaseUrl });
     const accountIds = [];
     let server;
+    let realtimeServer;
+    let firstSocket;
+    let secondSocket;
+    let outsiderSocket;
 
     try {
       await runMigrations(pool);
-      const app = createApp({ pool, jwtSecret });
-      server = app.listen(0, '127.0.0.1');
+      let realtimeServerRef;
+      const ioBridge = {
+        to(room) {
+          return realtimeServerRef
+            ? realtimeServerRef.to(room)
+            : { emit: () => false };
+        },
+      };
+      const app = createApp({ pool, jwtSecret, io: ioBridge });
+      server = createServer(app);
+      realtimeServer = attachRealtimeGateway({ httpServer: server, pool, jwtSecret });
+      realtimeServerRef = realtimeServer;
+      server.listen(0, '127.0.0.1');
       await once(server, 'listening');
 
       const baseUrl = 'http://127.0.0.1:' + server.address().port;
+
+      async function connectSocket(token) {
+        const socket = createSocketClient(baseUrl, {
+          transports: ['websocket'],
+          auth: { token },
+          reconnection: false,
+          timeout: 5000,
+        });
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('Socket connect timeout')), 6000);
+          socket.once('connect', () => {
+            clearTimeout(timeout);
+            resolve();
+          });
+          socket.once('connect_error', (error) => {
+            clearTimeout(timeout);
+            reject(error);
+          });
+        });
+        return socket;
+      }
+
+      async function joinSocketConversation(socket, conversationId) {
+        return new Promise((resolve) => {
+          socket.emit('conversation:join', { conversationId }, resolve);
+        });
+      }
 
       async function request(path, { method = 'GET', token, body } = {}) {
         const headers = { accept: 'application/json' };
@@ -179,6 +223,33 @@ test(
       );
       assert.equal(outsiderResponse.status, 404);
 
+      firstSocket = await connectSocket(first.accessToken);
+      secondSocket = await connectSocket(second.accessToken);
+      outsiderSocket = await connectSocket(third.accessToken);
+      assert.deepEqual(
+        await joinSocketConversation(firstSocket, conversationId),
+        { ok: true, conversationId },
+      );
+      assert.deepEqual(
+        await joinSocketConversation(secondSocket, conversationId),
+        { ok: true, conversationId },
+      );
+      assert.deepEqual(
+        await joinSocketConversation(outsiderSocket, conversationId),
+        { ok: false, code: 'conversation_not_found' },
+      );
+
+      const realtimeMessagePromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(
+          () => reject(new Error('Timed out waiting for message:new')),
+          6000,
+        );
+        secondSocket.once('message:new', (event) => {
+          clearTimeout(timeout);
+          resolve(event);
+        });
+      });
+
       const messageResponse = await request(
         '/api/v1/conversations/' + conversationId + '/messages',
         {
@@ -188,10 +259,13 @@ test(
         },
       );
       assert.equal(messageResponse.status, 201);
-      assert.equal(
-        (await messageResponse.json()).message.body,
-        'رسالة مباشرة محفوظة في قاعدة البيانات',
-      );
+      const postedMessage = (await messageResponse.json()).message;
+      assert.equal(postedMessage.body, 'رسالة مباشرة محفوظة في قاعدة البيانات');
+
+      const realtimeMessage = await realtimeMessagePromise;
+      assert.equal(realtimeMessage.conversationId, conversationId);
+      assert.equal(realtimeMessage.id, postedMessage.id);
+      assert.equal(realtimeMessage.body, postedMessage.body);
 
       const inboxResponse = await request('/api/v1/conversations', {
         token: second.accessToken,
@@ -227,19 +301,26 @@ test(
         0,
       );
     } finally {
+      firstSocket?.disconnect();
+      secondSocket?.disconnect();
+      outsiderSocket?.disconnect();
       try {
-        if (accountIds.length > 0) {
-          await pool.query(
-            'DELETE FROM users WHERE id = ANY($1::uuid[])',
-            [accountIds],
-          );
-        }
-      } finally {
-        if (server) {
-          server.closeAllConnections();
+        if (realtimeServer) {
+          await new Promise((resolve) => realtimeServer.close(resolve));
+        } else if (server?.listening) {
           await new Promise((resolve) => server.close(resolve));
         }
-        await pool.end();
+      } finally {
+        try {
+          if (accountIds.length > 0) {
+            await pool.query(
+              'DELETE FROM users WHERE id = ANY($1::uuid[])',
+              [accountIds],
+            );
+          }
+        } finally {
+          await pool.end();
+        }
       }
     }
   },
