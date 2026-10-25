@@ -41,6 +41,14 @@ class _FakeAuthRepository implements AuthRepository {
       _session;
 
   @override
+  Future<AuthUser> updateProfile({
+    required String accessToken,
+    required String displayName,
+    required String bio,
+  }) async =>
+      _user.copyWith(displayName: displayName, bio: bio);
+
+  @override
   Future<void> logout() async {}
 }
 
@@ -124,6 +132,27 @@ void main() {
 
     expect(find.text('المحادثات'), findsOneWidget);
     expect(find.textContaining('نظام الرسائل اللحظية'), findsOneWidget);
+  });
+
+  testWidgets('profile edits are submitted and reflected in the screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('حسابي'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('تعديل الملف الشخصي'));
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'اسم جديد');
+    await tester.enterText(fields.at(1), 'نبذة جديدة');
+    await tester.tap(find.text('حفظ'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('اسم جديد'), findsOneWidget);
+    expect(find.text('نبذة جديدة'), findsOneWidget);
   });
 
   testWidgets('shows login and registration when there is no saved session', (
