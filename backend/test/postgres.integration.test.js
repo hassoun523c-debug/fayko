@@ -156,11 +156,12 @@ test(
       const createPostResponse = await request('/api/v1/posts', {
         method: 'POST',
         token: first.accessToken,
-        body: { body: 'منشور تكامل حقيقي' },
+        body: { body: 'منشور تكامل حقيقي', category: 'sports' },
       });
       assert.equal(createPostResponse.status, 201);
       const createdPost = (await createPostResponse.json()).post;
       assert.equal(createdPost.body, 'منشور تكامل حقيقي');
+      assert.equal(createdPost.category, 'sports');
 
       const likeResponse = await request(
         '/api/v1/posts/' + createdPost.id + '/like',
