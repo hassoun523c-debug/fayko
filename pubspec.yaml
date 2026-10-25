@@ -13,8 +13,10 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   flutter_secure_storage: ^11.2.0
+  image_picker: ^1.2.4
   http: ^1.6.0
   socket_io_client: ^3.1.6
+  video_player: ^2.14.1
 
 dev_dependencies:
   flutter_test:
