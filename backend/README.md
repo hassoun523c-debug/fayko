@@ -21,7 +21,7 @@ For an Android emulator, Flutter's default API URL is `http://10.0.2.2:4000/api/
 - POST `/api/v1/auth/register` — create a user and return a short-lived bearer access token.
 - POST `/api/v1/auth/login` — authenticate by username or email.
 - GET `/api/v1/auth/me` — return the current user's profile.
-- PATCH `/api/v1/auth/me` — update display name, bio, or avatar URL.
+- PATCH `/api/v1/auth/me` — update display name, bio, avatar URL, and up to 15 interest categories.
 - GET `/api/v1/posts` — authenticated, cursor-paginated public post feed.
 - POST `/api/v1/posts` — create a text post.
 - POST / DELETE `/api/v1/posts/:postId/like` — like or unlike a post.
@@ -45,6 +45,8 @@ The Flutter client currently connects to register/login/session restore, profile
 ## Tests and security baseline
 
 Node's built-in test runner includes validation, password/token and HTTP route tests using a mocked database pool, plus an end-to-end test against PostgreSQL and Socket.IO when TEST_DATABASE_URL is configured. CI is set up with a PostgreSQL service; the latest run still needs verification. Authenticated routes require an `Authorization: Bearer <access-token>` header. Request bodies are validated and bounded; passwords are bcrypt-hashed; SQL uses parameterized queries. Access tokens carry a session ID and every protected request checks that the server-side session is active; logout revokes the session, and active sockets for that session are disconnected. Registration/login use an in-memory rate limiter, which must be replaced with a shared store before running multiple API replicas.
+
+A temporary Render Blueprint is available at the repository root for a shared test API and PostgreSQL database. It has not been deployed yet; see [deployment instructions](../docs/DEPLOYMENT.md). The free database is temporary and expires after 30 days.
 
 ## Not implemented yet
 
