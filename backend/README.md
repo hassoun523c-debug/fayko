@@ -30,6 +30,9 @@ For an Android emulator, Flutter's default API URL is `http://10.0.2.2:4000/api/
 - GET `/api/v1/users/search?q=term&limit=20` — search public profiles.
 - GET `/api/v1/users/:userId` — read a public profile and counters.
 - POST / DELETE `/api/v1/users/:userId/follow` — follow or unfollow an account.
+- GET `/api/v1/users/blocked` — list accounts blocked by the current user.
+- POST / DELETE `/api/v1/users/:userId/block` — block or unblock a user.
+- POST `/api/v1/reports` — file a deduplicated report on a user, post, comment, or message.
 - POST `/api/v1/conversations/direct` — create or reuse a one-to-one conversation.
 - GET `/api/v1/conversations` — list conversations and unread counts.
 - GET / POST `/api/v1/conversations/:conversationId/messages` — read history or send a text message; only members can access it.
@@ -45,4 +48,4 @@ Node's built-in test runner includes validation, password/token and HTTP route t
 
 ## Not implemented yet
 
-The backend does not yet include presence/typing/detailed read-receipt Socket.IO events, refresh-token rotation, email verification, password recovery, media uploads/storage, push notifications, voice/video calls, end-to-end encryption, group conversations, message attachments/voice notes, a complete moderation/report/block system, production deployment, or a full security review. These must not be treated as complete.
+The backend does not yet include a moderator review queue or staff tools, appeal handling, presence/typing/detailed read-receipt Socket.IO events, refresh-token rotation, email verification, password recovery, media uploads/storage, push notifications, voice/video calls, end-to-end encryption, group conversations, message attachments/voice notes, production deployment, or a full security review. These must not be treated as complete.
