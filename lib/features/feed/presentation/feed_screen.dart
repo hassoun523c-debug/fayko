@@ -207,9 +207,7 @@ class FeedScreenState extends State<FeedScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'أهلاً بك في فايكو، ' +
-                        widget.session.user.displayName +
-                        ' 👋',
+                    'أهلاً بك في فايكو، ${widget.session.user.displayName} 👋',
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -322,7 +320,7 @@ class FeedScreenState extends State<FeedScreen> {
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     Text(
-                      '@' + post.author.username + ' · ' + _relativeTime(post.createdAt),
+                      '@${post.author.username} · ${_relativeTime(post.createdAt)}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: colors.onSurfaceVariant,
                           ),
@@ -381,19 +379,15 @@ class FeedScreenState extends State<FeedScreen> {
     final elapsed = DateTime.now().difference(date.toLocal());
     if (elapsed.inSeconds < 60) return 'الآن';
     if (elapsed.inMinutes < 60) {
-      return 'قبل ' + elapsed.inMinutes.toString() + ' د';
+      return 'قبل ${elapsed.inMinutes} د';
     }
     if (elapsed.inHours < 24) {
-      return 'قبل ' + elapsed.inHours.toString() + ' س';
+      return 'قبل ${elapsed.inHours} س';
     }
     if (elapsed.inDays < 7) {
-      return 'قبل ' + elapsed.inDays.toString() + ' ي';
+      return 'قبل ${elapsed.inDays} ي';
     }
-    return date.day.toString() +
-        '/' +
-        date.month.toString() +
-        '/' +
-        date.year.toString();
+    return '${date.day}/${date.month}/${date.year}';
   }
 }
 
@@ -453,7 +447,9 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                 DropdownMenuItem(value: 'global_trends', child: Text('ترندات العالم')),
               ],
               onChanged: (category) {
-                if (category != null) setState(() => _selectedCategory = category);
+                if (category != null) {
+                  setState(() => _selectedCategory = category);
+                }
               },
             ),
             const SizedBox(height: 12),
