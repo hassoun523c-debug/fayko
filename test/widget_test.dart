@@ -166,8 +166,20 @@ class _FakeFeedRepository implements FeedRepository {
     required String accessToken,
     required String body,
     String category = 'general',
-  }) async =>
-      throw UnimplementedError();
+  }) async => FeedPost(
+        id: 'created-post',
+        body: body,
+        category: category,
+        author: PostAuthor(
+          id: _user.id,
+          username: _user.username,
+          displayName: _user.displayName,
+        ),
+        likesCount: 0,
+        commentsCount: 0,
+        likedByMe: false,
+        createdAt: DateTime.now(),
+      );
 
   @override
   Future<void> setLiked({
@@ -217,6 +229,27 @@ void main() {
       tester.element(find.byType(FeedScreen)),
     );
     expect(direction, TextDirection.rtl);
+  });
+
+  testWidgets('publishes a post with its selected category', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('منشور جديد'));
+    await tester.pumpAndSettle();
+    expect(find.text('تصنيف المنشور'), findsOneWidget);
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('رياضة').last);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'منشور رياضي للاختبار');
+    await tester.tap(find.text('نشر'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('منشور رياضي للاختبار'), findsOneWidget);
+    expect(find.text('رياضة'), findsOneWidget);
   });
 
   testWidgets('bottom navigation opens the reels section', (tester) async {
