@@ -32,6 +32,7 @@ export function attachRealtimeGateway({ httpServer, pool, jwtSecret }) {
     try {
       const principal = verifyAccessToken(token, jwtSecret);
       socket.data.userId = principal.userId;
+      socket.data.sessionId = principal.sessionId;
       return next();
     } catch {
       return next(new Error('invalid_access_token'));
