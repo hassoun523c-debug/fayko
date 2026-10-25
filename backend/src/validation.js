@@ -34,7 +34,7 @@ export const loginSchema = z.object({
     .min(3)
     .max(254)
     .transform((value) => value.toLowerCase()),
-  password: z.string().min(1).max(72),
+  password: passwordSchema,
 });
 
 export const profileUpdateSchema = z
