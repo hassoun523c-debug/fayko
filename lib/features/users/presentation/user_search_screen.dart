@@ -291,6 +291,82 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               ),
             ),
             if (_loading) const LinearProgressIndicator(minHeight: 2),
+            if (_lastQuery == null && _error == null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: AlignmentDirectional.topStart,
+                      end: AlignmentDirectional.bottomEnd,
+                      colors: [
+                        colors.primaryContainer,
+                        colors.surfaceContainerHighest,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              color: colors.surface.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Icon(
+                              Icons.travel_explore_rounded,
+                              size: 27,
+                              color: colors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'اكتشف ناس جدد',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'ابحث عن أصدقائك في Vemblix، تابع الحسابات اللي تعجبك، وافتح محادثة مباشرة من نتائج البحث.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                              height: 1.45,
+                            ),
+                      ),
+                      const SizedBox(height: 14),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _DiscoverHint(
+                            icon: Icons.search_rounded,
+                            label: 'ابحث عن حساب',
+                          ),
+                          _DiscoverHint(
+                            icon: Icons.person_add_alt_1_rounded,
+                            label: 'تابع الأصدقاء',
+                          ),
+                          _DiscoverHint(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            label: 'ابدأ مراسلة',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -421,6 +497,33 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DiscoverHint extends StatelessWidget {
+  const _DiscoverHint({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: colors.primary),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
