@@ -6,6 +6,7 @@ class AuthUser {
     required this.displayName,
     required this.bio,
     this.avatarUrl,
+    this.interests = const [],
   });
 
   final String id;
@@ -14,12 +15,14 @@ class AuthUser {
   final String displayName;
   final String bio;
   final String? avatarUrl;
+  final List<String> interests;
 
   AuthUser copyWith({
     String? displayName,
     String? bio,
     String? avatarUrl,
     bool clearAvatar = false,
+    List<String>? interests,
   }) {
     return AuthUser(
       id: id,
@@ -28,10 +31,12 @@ class AuthUser {
       displayName: displayName ?? this.displayName,
       bio: bio ?? this.bio,
       avatarUrl: clearAvatar ? null : (avatarUrl ?? this.avatarUrl),
+      interests: interests ?? this.interests,
     );
   }
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
+    final rawInterests = json['interests'];
     return AuthUser(
       id: json['id'] as String,
       username: json['username'] as String,
@@ -39,6 +44,9 @@ class AuthUser {
       displayName: json['displayName'] as String,
       bio: (json['bio'] as String?) ?? '',
       avatarUrl: json['avatarUrl'] as String?,
+      interests: rawInterests is List
+          ? rawInterests.whereType<String>().toList(growable: false)
+          : const [],
     );
   }
 }
