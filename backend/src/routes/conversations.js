@@ -327,6 +327,7 @@ export function createConversationsRouter({ pool, jwtSecret, io = null }) {
     );
     const sender = senderResult.rows[0];
     const messagePayload = {
+      conversationId,
       id: message.id,
       body: message.body,
       createdAt: message.created_at,
