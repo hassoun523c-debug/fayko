@@ -73,7 +73,7 @@ export function createPostsRouter({ pool, jwtSecret }) {
     }
 
     const query = [
-      'SELECT p.id, p.body, p.created_at, p.updated_at,',
+      'SELECT p.id, p.body, p.category, p.created_at, p.updated_at,',
       "json_build_object('id', u.id, 'username', u.username,",
       "'displayName', u.display_name, 'avatarUrl', u.avatar_url) AS author,",
       '(SELECT COUNT(*)::int FROM post_likes pl WHERE pl.post_id = p.id) AS likes_count,',
@@ -101,6 +101,7 @@ export function createPostsRouter({ pool, jwtSecret }) {
     const posts = rows.map((row) => ({
       id: row.id,
       body: row.body,
+      category: row.category ?? 'general',
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       author: row.author,
@@ -124,14 +125,14 @@ export function createPostsRouter({ pool, jwtSecret }) {
     }
 
     const inserted = await pool.query(
-      'INSERT INTO posts (author_id, body) VALUES ($1, $2) ' +
-        'RETURNING id, body, created_at, updated_at',
-      [req.auth.userId, parsed.data.body],
+      'INSERT INTO posts (author_id, body, category) VALUES ($1, $2, $3) ' +
+        'RETURNING id, body, category, created_at, updated_at',
+      [req.auth.userId, parsed.data.body, parsed.data.category ?? 'general'],
     );
     const row = inserted.rows[0];
 
     const result = await pool.query(
-      'SELECT p.id, p.body, p.created_at, p.updated_at, ' +
+      'SELECT p.id, p.body, p.category, p.created_at, p.updated_at, ' +
         "json_build_object('id', u.id, 'username', u.username, " +
         "'displayName', u.display_name, 'avatarUrl', u.avatar_url) AS author " +
         'FROM posts p JOIN users u ON u.id = p.author_id WHERE p.id = $1',
@@ -143,6 +144,7 @@ export function createPostsRouter({ pool, jwtSecret }) {
       post: {
         id: post.id,
         body: post.body,
+        category: post.category ?? 'general',
         createdAt: post.created_at,
         updatedAt: post.updated_at,
         author: post.author,
