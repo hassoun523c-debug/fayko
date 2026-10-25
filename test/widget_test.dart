@@ -1,5 +1,6 @@
 import 'package:fayko/features/auth/data/auth_repository.dart';
 import 'package:fayko/features/chat/data/chat_repository.dart';
+import 'package:fayko/features/chat/data/noop_chat_realtime.dart';
 import 'package:fayko/features/chat/domain/chat_conversation.dart';
 import 'package:fayko/features/auth/domain/auth_user.dart';
 import 'package:fayko/features/feed/data/feed_repository.dart';
@@ -175,6 +176,7 @@ Widget _app({bool authenticated = true}) {
     feedRepository: const _FakeFeedRepository(),
     usersRepository: const _FakeUsersRepository(),
     chatRepository: const _FakeChatRepository(),
+    chatRealtime: const NoopChatRealtime(),
   );
 }
 
