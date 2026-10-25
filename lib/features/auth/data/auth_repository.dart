@@ -131,5 +131,22 @@ class RemoteAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> logout() => _tokenStore.clearToken();
+  Future<void> logout() async {
+    String? token;
+    try {
+      token = await _tokenStore.readToken();
+    } catch (_) {
+      // Continue with local sign-out even if secure-storage read fails.
+    }
+
+    try {
+      if (token != null && token.isNotEmpty) {
+        await _apiClient.post('/auth/logout', token: token);
+      }
+    } catch (_) {
+      // Local sign-out must still work offline; the access token is short-lived.
+    } finally {
+      await _tokenStore.clearToken();
+    }
+  }
 }
