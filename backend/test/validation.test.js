@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   commentSchema,
   loginSchema,
+  messageSchema,
   postSchema,
   profileUpdateSchema,
   registerSchema,
@@ -62,4 +63,7 @@ test('post and comment bodies are trimmed and bounded', () => {
   assert.equal(postSchema.safeParse({ body: '   ' }).success, false);
   assert.equal(postSchema.safeParse({ body: 'x'.repeat(2001) }).success, false);
   assert.equal(commentSchema.safeParse({ body: 'x'.repeat(1001) }).success, false);
+  assert.equal(messageSchema.parse({ body: '  رسالة  ' }).body, 'رسالة');
+  assert.equal(messageSchema.safeParse({ body: '   ' }).success, false);
+  assert.equal(messageSchema.safeParse({ body: 'x'.repeat(4001) }).success, false);
 });
