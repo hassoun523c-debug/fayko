@@ -29,7 +29,7 @@ void main() {
     expect(captured?.url.path, '/api/v1/posts');
     expect(captured?.url.queryParameters['limit'], '20');
     expect(captured?.headers['authorization'], 'Bearer signed-test-token');
-    expect(payload['posts'], isA<List<Object>>());
+    expect(payload['posts'], isA<List<dynamic>>());
     client.close();
   });
 
