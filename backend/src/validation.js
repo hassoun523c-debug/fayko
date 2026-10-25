@@ -73,8 +73,11 @@ export const profileUpdateSchema = z
     'At least one profile field must be supplied.',
   );
 
+export const postCategoryValues = ['general', ...interestValues];
+
 export const postSchema = z.object({
   body: z.string().trim().min(1).max(2000),
+  category: z.enum(postCategoryValues).optional(),
 });
 
 export const commentSchema = z.object({
