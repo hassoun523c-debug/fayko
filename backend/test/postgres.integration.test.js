@@ -34,6 +34,11 @@ test(
             ? realtimeServerRef.to(room)
             : { emit: () => false };
         },
+        in(room) {
+          return realtimeServerRef
+            ? realtimeServerRef.in(room)
+            : { disconnectSockets: () => false };
+        },
       };
       const app = createApp({ pool, jwtSecret, io: ioBridge });
       server = createServer(app);
@@ -300,6 +305,21 @@ test(
       assert.equal(
         readInbox.conversations.find((item) => item.id === conversationId).unreadCount,
         0,
+      );
+
+      const logoutResponse = await request('/api/v1/auth/logout', {
+        method: 'POST',
+        token: first.accessToken,
+      });
+      assert.equal(logoutResponse.status, 204);
+
+      const revokedSessionResponse = await request('/api/v1/auth/me', {
+        token: first.accessToken,
+      });
+      assert.equal(revokedSessionResponse.status, 401);
+      assert.equal(
+        (await revokedSessionResponse.json()).error.code,
+        'session_revoked_or_expired',
       );
     } finally {
       firstSocket?.disconnect();
