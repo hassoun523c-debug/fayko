@@ -56,18 +56,26 @@ test(
           reconnection: false,
           timeout: 5000,
         });
-        await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Socket connect timeout')), 6000);
-          socket.once('connect', () => {
-            clearTimeout(timeout);
-            resolve();
+        try {
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(
+              () => reject(new Error('Socket connect timeout')),
+              6000,
+            );
+            socket.once('connect', () => {
+              clearTimeout(timeout);
+              resolve();
+            });
+            socket.once('connect_error', (error) => {
+              clearTimeout(timeout);
+              reject(error);
+            });
           });
-          socket.once('connect_error', (error) => {
-            clearTimeout(timeout);
-            reject(error);
-          });
-        });
-        return socket;
+          return socket;
+        } catch (error) {
+          socket.disconnect();
+          throw error;
+        }
       }
 
       async function joinSocketConversation(socket, conversationId) {
@@ -307,11 +315,21 @@ test(
         0,
       );
 
+      const firstSocketDisconnected = new Promise((resolve) => {
+        firstSocket.once('disconnect', resolve);
+      });
       const logoutResponse = await request('/api/v1/auth/logout', {
         method: 'POST',
         token: first.accessToken,
       });
       assert.equal(logoutResponse.status, 204);
+      await firstSocketDisconnected;
+      assert.equal(firstSocket.connected, false);
+
+      await assert.rejects(
+        connectSocket(first.accessToken),
+        /session_revoked_or_expired/,
+      );
 
       const revokedSessionResponse = await request('/api/v1/auth/me', {
         token: first.accessToken,
