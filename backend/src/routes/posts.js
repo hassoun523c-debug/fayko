@@ -1,5 +1,6 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
+import { isBlockedBetween } from '../moderation.js';
 import {
   commentSchema,
   postSchema,
@@ -82,6 +83,9 @@ export function createPostsRouter({ pool, jwtSecret }) {
       'FROM posts p JOIN users u ON u.id = p.author_id',
       'WHERE ($2::timestamptz IS NULL OR',
       '(p.created_at, p.id) < ($2::timestamptz, $3::uuid))',
+      'AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE ',
+      '(b.blocker_id = $4 AND b.blocked_id = p.author_id) OR ',
+      '(b.blocker_id = p.author_id AND b.blocked_id = $4))',
       'ORDER BY p.created_at DESC, p.id DESC LIMIT $1',
     ].join(' ');
 
@@ -158,8 +162,8 @@ export function createPostsRouter({ pool, jwtSecret }) {
     }
 
     const postId = parsedId.data;
-    const exists = await pool.query('SELECT 1 FROM posts WHERE id = $1', [postId]);
-    if (exists.rows.length === 0) {
+    const exists = await pool.query('SELECT author_id FROM posts WHERE id = $1', [postId]);
+    if (exists.rows.length === 0 || await isBlockedBetween(pool, req.auth.userId, exists.rows[0].author_id)) {
       return respondNotFound(res);
     }
 
@@ -181,8 +185,8 @@ export function createPostsRouter({ pool, jwtSecret }) {
     }
 
     const postId = parsedId.data;
-    const exists = await pool.query('SELECT 1 FROM posts WHERE id = $1', [postId]);
-    if (exists.rows.length === 0) {
+    const exists = await pool.query('SELECT author_id FROM posts WHERE id = $1', [postId]);
+    if (exists.rows.length === 0 || await isBlockedBetween(pool, req.auth.userId, exists.rows[0].author_id)) {
       return respondNotFound(res);
     }
 
@@ -203,8 +207,8 @@ export function createPostsRouter({ pool, jwtSecret }) {
     }
 
     const postId = parsedId.data;
-    const exists = await pool.query('SELECT 1 FROM posts WHERE id = $1', [postId]);
-    if (exists.rows.length === 0) {
+    const exists = await pool.query('SELECT author_id FROM posts WHERE id = $1', [postId]);
+    if (exists.rows.length === 0 || await isBlockedBetween(pool, req.auth.userId, exists.rows[0].author_id)) {
       return respondNotFound(res, 'comment');
     }
 
@@ -213,10 +217,13 @@ export function createPostsRouter({ pool, jwtSecret }) {
         "json_build_object('id', u.id, 'username', u.username, " +
         "'displayName', u.display_name, 'avatarUrl', u.avatar_url) AS author " +
         'FROM (SELECT * FROM comments WHERE post_id = $1 ' +
+        'AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE ' +
+        '(b.blocker_id = $2 AND b.blocked_id = comments.author_id) OR ' +
+        '(b.blocker_id = comments.author_id AND b.blocked_id = $2)) ' +
         'ORDER BY created_at DESC, id DESC LIMIT 100) c ' +
         'JOIN users u ON u.id = c.author_id ' +
         'ORDER BY c.created_at ASC, c.id ASC',
-      [postId],
+      [postId, req.auth.userId],
     );
 
     return res.status(200).json({
@@ -245,6 +252,9 @@ export function createPostsRouter({ pool, jwtSecret }) {
     const inserted = await pool.query(
       'INSERT INTO comments (post_id, author_id, body) ' +
         'SELECT p.id, $2, $3 FROM posts p WHERE p.id = $1 ' +
+        'AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE ' +
+        '(b.blocker_id = $2 AND b.blocked_id = p.author_id) OR ' +
+        '(b.blocker_id = p.author_id AND b.blocked_id = $2)) ' +
         'RETURNING id, body, created_at, author_id',
       [parsedId.data, req.auth.userId, parsedBody.data.body],
     );
