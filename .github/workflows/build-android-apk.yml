@@ -49,12 +49,12 @@ jobs:
         continue-on-error: true
 
       - name: Build preview APK
-        run: flutter build apk --debug --dart-define=VEMBLIX_PREVIEW_MODE=true
+        run: flutter build apk --release --split-per-abi --dart-define=VEMBLIX_PREVIEW_MODE=true
 
       - name: Upload preview APK
         uses: actions/upload-artifact@v4
         with:
-          name: Vemblix-Android-Preview-APK
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: Vemblix-Android-Preview-APKs
+          path: build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
           retention-days: 14

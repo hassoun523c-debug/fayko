@@ -366,6 +366,64 @@ class _AuthGateState extends State<AuthGate> {
     return fallback;
   }
 
+  void _showPreviewNotifications() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'الإشعارات',
+                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                ),
+                SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: Color(0x33FF2E9C),
+                    child: Icon(Icons.favorite_rounded, color: Color(0xFFFF2E9C)),
+                  ),
+                  title: Text('سارة أعجبت بمنشورك'),
+                  subtitle: Text('منذ 5 دقائق'),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: Color(0x338B5CF6),
+                    child: Icon(Icons.person_add_alt_1_rounded, color: Color(0xFF8B5CF6)),
+                  ),
+                  title: Text('أحمد بدأ بمتابعتك'),
+                  subtitle: Text('منذ 12 دقيقة'),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: Color(0x333282F6),
+                    child: Icon(Icons.chat_bubble_rounded, color: Color(0xFF3282F6)),
+                  ),
+                  title: Text('لديك رسالة جديدة'),
+                  subtitle: Text('افتح المراسلات لمشاهدتها'),
+                ),
+                Divider(),
+                Text(
+                  'إشعارات توضيحية للمعاينة فقط؛ الإشعارات الحقيقية تحتاج ربط الخادم.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_restoring) {
@@ -391,6 +449,12 @@ class _AuthGateState extends State<AuthGate> {
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
         actions: [
+          if (vemblixPreviewMode)
+            IconButton(
+              tooltip: 'الإشعارات التجريبية',
+              onPressed: _showPreviewNotifications,
+              icon: const Icon(Icons.notifications_none_rounded),
+            ),
           if (vemblixPreviewMode)
             const Padding(
               padding: EdgeInsetsDirectional.only(end: 8),
