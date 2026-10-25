@@ -212,6 +212,30 @@ test(
       assert.equal(profile.isFollowing, true);
       assert.equal(profile.followersCount, 1);
 
+      const reportResponse = await request('/api/v1/reports', {
+        method: 'POST',
+        token: second.accessToken,
+        body: {
+          targetType: 'post',
+          targetId: createdPost.id,
+          reason: 'spam',
+          details: 'بلاغ تكامل اختبار',
+        },
+      });
+      assert.equal(reportResponse.status, 201);
+      assert.equal((await reportResponse.json()).report.reason, 'spam');
+
+      const duplicateReportResponse = await request('/api/v1/reports', {
+        method: 'POST',
+        token: second.accessToken,
+        body: {
+          targetType: 'post',
+          targetId: createdPost.id,
+          reason: 'spam',
+        },
+      });
+      assert.equal(duplicateReportResponse.status, 409);
+
       const directResponse = await request('/api/v1/conversations/direct', {
         method: 'POST',
         token: first.accessToken,
@@ -339,6 +363,32 @@ test(
         (await revokedSessionResponse.json()).error.code,
         'session_revoked_or_expired',
       );
+
+      const blockResponse = await request(
+        '/api/v1/users/' + second.user.id + '/block',
+        { method: 'POST', token: third.accessToken },
+      );
+      assert.equal(blockResponse.status, 200);
+      assert.equal((await blockResponse.json()).blocked, true);
+
+      const blockedMessageResponse = await request(
+        '/api/v1/conversations/' + conversationId + '/messages',
+        {
+          method: 'POST',
+          token: second.accessToken,
+          body: { body: 'يجب رفض هذه الرسالة بعد الحظر' },
+        },
+      );
+      assert.equal(blockedMessageResponse.status, 404);
+
+      const blockedSocketJoin = await joinSocketConversation(
+        secondSocket,
+        conversationId,
+      );
+      assert.deepEqual(blockedSocketJoin, {
+        ok: false,
+        code: 'conversation_not_found',
+      });
     } finally {
       firstSocket?.disconnect();
       secondSocket?.disconnect();
