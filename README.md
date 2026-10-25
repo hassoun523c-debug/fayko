@@ -1,6 +1,6 @@
-# فايكو | Fayko
+# Vemblix
 
-منصة تواصل اجتماعي عربية قيد التطوير باستخدام Flutter/Dart وخادم Node.js مع PostgreSQL.
+منصة Vemblix للتواصل الاجتماعي العربية قيد التطوير باستخدام Flutter/Dart وخادم Node.js مع PostgreSQL.
 
 ## الموجود حالياً
 
