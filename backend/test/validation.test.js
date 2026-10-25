@@ -9,6 +9,8 @@ import {
   registerSchema,
   reportSchema,
   interestsSchema,
+  reelUploadSchema,
+  reelCreateSchema,
 } from '../src/validation.js';
 
 test('registration trims and normalizes account identifiers', () => {
@@ -115,4 +117,42 @@ test('posts accept an optional supported category', () => {
     category: 'sports',
   });
   assert.equal(postSchema.safeParse({ body: 'منشور', category: 'unknown' }).success, false);
+});
+
+test('reel upload metadata is bounded and only accepts MP4', () => {
+  assert.deepEqual(reelUploadSchema.parse({
+    category: 'gaming',
+    contentType: 'video/mp4',
+    fileSizeBytes: 1024,
+  }), {
+    category: 'gaming',
+    contentType: 'video/mp4',
+    fileSizeBytes: 1024,
+  });
+  assert.equal(reelUploadSchema.safeParse({
+    category: 'gaming',
+    contentType: 'video/webm',
+    fileSizeBytes: 1024,
+  }).success, false);
+  assert.equal(reelUploadSchema.safeParse({
+    category: 'gaming',
+    contentType: 'video/mp4',
+    fileSizeBytes: 200 * 1024 * 1024,
+  }).success, false);
+  assert.equal(reelCreateSchema.safeParse({
+    objectKey: 'somebody-else/file.mp4',
+    caption: 'caption',
+    category: 'sports',
+    contentType: 'video/mp4',
+    fileSizeBytes: 1024,
+    durationSeconds: 181,
+  }).success, false);
+});
+
+test('reports can target a reel', () => {
+  assert.equal(reportSchema.safeParse({
+    targetType: 'reel',
+    targetId: '18347b23-45c6-4c5f-8d6c-1e010f001c6a',
+    reason: 'other',
+  }).success, true);
 });
