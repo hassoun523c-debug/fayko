@@ -31,11 +31,11 @@ For an Android emulator, Flutter's default API URL is `http://10.0.2.2:4000/api/
 - GET `/api/v1/users/:userId` — read a public profile and counters.
 - POST / DELETE `/api/v1/users/:userId/follow` — follow or unfollow an account.
 
-The Flutter client currently connects to register/login/session restore and the text-feed, likes, and comment routes. Search/follow APIs are not connected to a Flutter screen yet.
+The Flutter client currently connects to register/login/session restore, profile updates, the text-feed, likes and comment routes, and has a user-search/follow screen. These paths are implemented in source, but must still be verified end-to-end against a running PostgreSQL instance and Android environment.
 
 ## Tests and security baseline
 
-Node's built-in test runner includes validation, password/token and HTTP route tests using a mocked database pool. Those tests do not replace integration tests against a real PostgreSQL instance. Authenticated routes require an `Authorization: Bearer <access-token>` header. Request bodies are validated and bounded; passwords are bcrypt-hashed; SQL uses parameterized queries. Registration/login use an in-memory rate limiter, which must be replaced with a shared store before running multiple API replicas.
+Node's built-in test runner includes validation, password/token and HTTP route tests using a mocked database pool, plus an end-to-end test against PostgreSQL when TEST_DATABASE_URL is configured. CI is set up with PostgreSQL service for that integration test; the latest run still needs verification. Authenticated routes require an `Authorization: Bearer <access-token>` header. Request bodies are validated and bounded; passwords are bcrypt-hashed; SQL uses parameterized queries. Registration/login use an in-memory rate limiter, which must be replaced with a shared store before running multiple API replicas.
 
 ## Not implemented yet
 
