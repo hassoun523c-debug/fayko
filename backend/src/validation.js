@@ -80,6 +80,23 @@ export const postSchema = z.object({
   category: z.enum(postCategoryValues).optional(),
 });
 
+const maxReelBytes = 150 * 1024 * 1024;
+
+export const reelUploadSchema = z.object({
+  category: z.enum(interestValues),
+  contentType: z.literal('video/mp4'),
+  fileSizeBytes: z.number().int().min(1).max(maxReelBytes),
+});
+
+export const reelCreateSchema = z.object({
+  objectKey: z.string().trim().min(1).max(512),
+  caption: z.string().trim().max(2000).optional().transform((value) => value ?? ''),
+  category: z.enum(interestValues),
+  contentType: z.literal('video/mp4'),
+  fileSizeBytes: z.number().int().min(1).max(maxReelBytes),
+  durationSeconds: z.number().int().min(1).max(180).optional(),
+});
+
 export const commentSchema = z.object({
   body: z.string().trim().min(1).max(1000),
 });
