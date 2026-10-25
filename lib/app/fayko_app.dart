@@ -112,6 +112,7 @@ class _AuthGateState extends State<AuthGate> {
   late final UsersRepository _usersRepository;
   late final ChatRepository _chatRepository;
   final GlobalKey<FeedScreenState> _feedKey = GlobalKey<FeedScreenState>();
+  final GlobalKey<ChatListScreenState> _chatKey = GlobalKey<ChatListScreenState>();
 
   AuthSession? _session;
   bool _restoring = true;
@@ -336,6 +337,7 @@ class _AuthGateState extends State<AuthGate> {
             description: 'الفيديوهات القصيرة تحتاج مرحلة رفع ومعالجة الفيديو.',
           ),
           ChatListScreen(
+            key: _chatKey,
             session: session,
             repository: _chatRepository,
           ),
@@ -357,6 +359,7 @@ class _AuthGateState extends State<AuthGate> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() => _selectedIndex = index);
+          if (index == 2) _chatKey.currentState?.refresh();
         },
         destinations: const [
           NavigationDestination(
