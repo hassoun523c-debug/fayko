@@ -22,50 +22,6 @@ class _MemoryTokenStore implements TokenStore {
   Future<void> writeToken(String token) async {
     value = token;
   }
-  test('logout revokes the server session and clears the saved token', () async {
-    final store = _MemoryTokenStore()..value = 'existing-access-token';
-    final api = ApiClient(
-      baseUrl: 'https://api.example.test/api/v1',
-      client: MockClient((request) async {
-        expect(request.method, 'POST');
-        expect(request.url.path, '/api/v1/auth/logout');
-        expect(
-          request.headers['authorization'],
-          'Bearer existing-access-token',
-        );
-        return http.Response('', 204);
-      }),
-    );
-    final repository = RemoteAuthRepository(
-      apiClient: api,
-      tokenStore: store,
-    );
-
-    await repository.logout();
-
-    expect(store.value, isNull);
-    api.close();
-  });
-
-  test('offline logout still clears the local token', () async {
-    final store = _MemoryTokenStore()..value = 'offline-access-token';
-    final api = ApiClient(
-      baseUrl: 'https://api.example.test/api/v1',
-      client: MockClient((_) async {
-        throw http.ClientException('offline');
-      }),
-    );
-    final repository = RemoteAuthRepository(
-      apiClient: api,
-      tokenStore: store,
-    );
-
-    await repository.logout();
-
-    expect(store.value, isNull);
-    api.close();
-  });
-
 }
 
 const _userJson = <String, dynamic>{
@@ -170,6 +126,50 @@ void main() {
     final session = await repository.restoreSession();
 
     expect(session, isNull);
+    expect(store.value, isNull);
+    api.close();
+  });
+
+  test('logout revokes the server session and clears the saved token', () async {
+    final store = _MemoryTokenStore()..value = 'existing-access-token';
+    final api = ApiClient(
+      baseUrl: 'https://api.example.test/api/v1',
+      client: MockClient((request) async {
+        expect(request.method, 'POST');
+        expect(request.url.path, '/api/v1/auth/logout');
+        expect(
+          request.headers['authorization'],
+          'Bearer existing-access-token',
+        );
+        return http.Response('', 204);
+      }),
+    );
+    final repository = RemoteAuthRepository(
+      apiClient: api,
+      tokenStore: store,
+    );
+
+    await repository.logout();
+
+    expect(store.value, isNull);
+    api.close();
+  });
+
+  test('offline logout still clears the local token', () async {
+    final store = _MemoryTokenStore()..value = 'offline-access-token';
+    final api = ApiClient(
+      baseUrl: 'https://api.example.test/api/v1',
+      client: MockClient((_) async {
+        throw http.ClientException('offline');
+      }),
+    );
+    final repository = RemoteAuthRepository(
+      apiClient: api,
+      tokenStore: store,
+    );
+
+    await repository.logout();
+
     expect(store.value, isNull);
     api.close();
   });
