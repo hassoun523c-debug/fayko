@@ -1,5 +1,6 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
+import { isBlockedBetween } from '../moderation.js';
 import { messageSchema, sendValidationError, uuidSchema } from '../validation.js';
 
 function encodeCursor(row) {
@@ -37,7 +38,13 @@ function errorResponse(res, status, code, message) {
 
 async function requireMembership(pool, conversationId, userId) {
   const result = await pool.query(
-    'SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2',
+    'SELECT 1 FROM conversation_members mine ' +
+      'WHERE mine.conversation_id = $1 AND mine.user_id = $2 ' +
+      'AND NOT EXISTS (SELECT 1 FROM conversation_members peer ' +
+      'JOIN user_blocks b ON ' +
+      '((b.blocker_id = $2 AND b.blocked_id = peer.user_id) OR ' +
+      '(b.blocker_id = peer.user_id AND b.blocked_id = $2)) ' +
+      'WHERE peer.conversation_id = mine.conversation_id AND peer.user_id <> $2)',
     [conversationId, userId],
   );
   return result.rows.length > 0;
@@ -74,7 +81,11 @@ export function createConversationsRouter({ pool, jwtSecret, io = null }) {
         'WHERE m.conversation_id = c.id AND m.sender_id <> $1',
         'AND m.created_at > mine.last_read_at AND m.deleted_at IS NULL',
         ') unread ON true',
-        'WHERE mine.user_id = $1',
+        'WHERE mine.user_id = $1 AND NOT EXISTS (' +
+        'SELECT 1 FROM conversation_members peer JOIN user_blocks b ON ' +
+        '((b.blocker_id = $1 AND b.blocked_id = peer.user_id) OR ' +
+        '(b.blocker_id = peer.user_id AND b.blocked_id = $1)) ' +
+        'WHERE peer.conversation_id = c.id AND peer.user_id <> $1)',
         'ORDER BY COALESCE(last.created_at, c.created_at) DESC, c.id DESC',
       ].join(' '),
       [req.auth.userId],
@@ -119,6 +130,10 @@ export function createConversationsRouter({ pool, jwtSecret, io = null }) {
         'cannot_message_self',
         'ما تگدر تفتح محادثة مباشرة ويا حسابك.',
       );
+    }
+
+    if (await isBlockedBetween(pool, currentUserId, recipientId)) {
+      return errorResponse(res, 403, 'blocked_relationship', 'لا يمكن فتح محادثة مع هذا الحساب.');
     }
 
     const client = await pool.connect();
